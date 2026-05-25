@@ -1,3 +1,4 @@
+test jira link
 # Eyewear System UTH
 
 Dự án được tách thành **2 ứng dụng độc lập** để dễ dàng phát triển và gỡ lỗi:
