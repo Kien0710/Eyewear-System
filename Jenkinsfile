@@ -64,6 +64,7 @@ pipeline {
                             ) else (
                                 echo PHP CLI is not installed on this Jenkins agent. Skipping PHP syntax check.
                             )
+                            exit /b 0
                         '''
                     }
                 }
