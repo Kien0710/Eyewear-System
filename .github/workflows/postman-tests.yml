@@ -174,7 +174,7 @@ jobs:
           let assigneeObj = undefined;
           if (members && members.length > 0) {
             const assigneeId = members[totalBugCount % members.length];
-            assigneeObj = { id: assigneeId };
+            assigneeObj = { accountId: assigneeId };
             totalBugCount++;
           }
           
