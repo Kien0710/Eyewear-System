@@ -210,75 +210,7 @@ jobs:
 
           # ── Tạo Jira ticket mới cho từng test FAIL ────────────────
           if [ -f reports/test-results.json ]; then
-            python3 << 'PYEOF'
-import json, subprocess, os, sys
-
-with open('reports/test-results.json') as f:
-    data = json.load(f)
-
-failures = data['run'].get('failures', [])
-if not failures:
-    print("No test failures — no new Jira tickets needed.")
-    sys.exit(0)
-
-JIRA_URL  = os.environ.get('JIRA_URL', '')
-JIRA_AUTH = os.environ.get('JIRA_AUTH', '')
-RUN_ID    = os.environ.get('RUN_ID', '')
-COMMIT    = os.environ.get('COMMIT_SHA', '')[:7]
-REPO      = os.environ.get('GITHUB_REPOSITORY', '')
-REPORT_URL = f"https://github.com/{REPO}/actions/runs/{RUN_ID}"
-
-created = 0
-for failure in failures:
-    name  = failure.get('source', {}).get('name', 'Unknown Test')
-    error = failure.get('error', {}).get('message', 'No details')
-
-    summary = f"[CI FAIL] {name} — Build #{RUN_ID}"
-    description = (
-        f"Test case '{name}' failed in CI pipeline.\n\n"
-        f"Commit: {COMMIT}\n"
-        f"Error: {error}\n"
-        f"Build Report: {REPORT_URL}"
-    )
-
-    payload = json.dumps({
-        "fields": {
-            "project": {"key": "ESQ"},
-            "summary": summary,
-            "description": {
-                "type": "doc", "version": 1,
-                "content": [{
-                    "type": "paragraph",
-                    "content": [{
-                        "type": "text",
-                        "text": description
-                    }]
-                }]
-            },
-            "issuetype": {"name": "Bug"},
-            "priority": {"name": "Medium"},
-            "labels": ["CI-auto", "postman-test"]
-        }
-    })
-
-    result = subprocess.run(
-        ['curl', '-s', '-o', '/dev/null', '-w', '%{http_code}',
-         '-X', 'POST',
-         f'{JIRA_URL}/rest/api/3/issue',
-         '-u', JIRA_AUTH,
-         '-H', 'Content-Type: application/json',
-         '-d', payload],
-        capture_output=True, text=True
-    )
-    code = result.stdout.strip()
-    if code in ('200', '201'):
-        print(f"✅ Created Jira bug for: {name}")
-        created += 1
-    else:
-        print(f"⚠️  Could not create ticket for '{name}' (HTTP {code})")
-
-print(f"Done. Created {created}/{len(failures)} Jira bug tickets.")
-PYEOF
+            python3 scripts/jira_report.py
           fi
 
           echo "Jira reporting complete."
