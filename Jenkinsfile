@@ -16,10 +16,7 @@ pipeline {
         SONAR_PROJECT_NAME = 'Eyewear System'
     }
 
-    tools {
-        // Tên này phải khớp với Name bạn đặt trong Manage Jenkins -> Tools
-        sonarScanner 'sonar-scanner'
-    }
+
 
     stages {
 
@@ -157,9 +154,10 @@ pipeline {
                 withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_AUTH_TOKEN')]) {
                     withSonarQubeEnv('SonarQube') {
                         script {
+                            def scannerHome = tool 'sonar-scanner'
                             if (isUnix()) {
                                 sh """
-                                    sonar-scanner \
+                                    "${scannerHome}/bin/sonar-scanner" \
                                         -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
                                         -Dsonar.projectName="${SONAR_PROJECT_NAME}" \
                                         -Dsonar.projectVersion=1.0.${BUILD_NUMBER} \
@@ -170,7 +168,7 @@ pipeline {
                                 """
                             } else {
                                 bat """
-                                    sonar-scanner ^
+                                    "${scannerHome}\\bin\\sonar-scanner.bat" ^
                                         -Dsonar.projectKey=%SONAR_PROJECT_KEY% ^
                                         -Dsonar.projectName="%SONAR_PROJECT_NAME%" ^
                                         -Dsonar.projectVersion=1.0.%BUILD_NUMBER% ^
