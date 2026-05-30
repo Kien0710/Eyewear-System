@@ -16,6 +16,11 @@ pipeline {
         SONAR_PROJECT_NAME = 'Eyewear System'
     }
 
+    tools {
+        // Tên này phải khớp với Name bạn đặt trong Manage Jenkins -> Tools
+        sonarScanner 'sonar-scanner'
+    }
+
     stages {
 
         // ─────────────────────────────────────────────────────────
