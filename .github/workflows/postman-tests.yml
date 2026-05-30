@@ -234,7 +234,7 @@ jobs:
             `AND statusCategory != Done`;
 
           const url =
-            `${jiraBase}/rest/api/2/search` +
+            `${jiraBase}/rest/api/3/search/jql` +
             `?jql=${encodeURIComponent(jql)}` +
             `&maxResults=1000` +
             `&fields=summary,status,labels,issuetype`;
@@ -293,18 +293,29 @@ jobs:
           }) || null;
         }
 
-        function commentExistingBug(issueKey, bug) {
-          const comment =
-            `CI/CD vẫn phát hiện lỗi này trong lần chạy mới.\n\n` +
-            `* API: ${bug.apiName}\n` +
-            `* Bộ test: ${bug.moduleName}\n` +
-            `* Lỗi: ${bug.errorMsg}\n` +
-            `* Người chạy: ${process.env.ACTOR}\n` +
-            `* Branch: ${process.env.BRANCH}\n` +
-            `* GitHub Actions Run #${process.env.RUN_NUMBER}: ${runUrl}\n` +
-            `* Report HTML: xem trong Artifacts của GitHub Actions.`;
+        function makeAdfDoc(lines) {
+          const content = lines.map(line => ({
+            type: "paragraph",
+            content: [{ type: "text", text: line }]
+          }));
+          return { version: 1, type: "doc", content };
+        }
 
-          curlJson("POST", `${jiraBase}/rest/api/2/issue/${issueKey}/comment`, { body: comment });
+        function commentExistingBug(issueKey, bug) {
+          const lines = [
+            `CI/CD vẫn phát hiện lỗi này trong lần chạy mới.`,
+            `API: ${bug.apiName}`,
+            `Bộ test: ${bug.moduleName}`,
+            `Lỗi: ${bug.errorMsg}`,
+            `Người chạy: ${process.env.ACTOR}`,
+            `Branch: ${process.env.BRANCH}`,
+            `GitHub Actions Run #${process.env.RUN_NUMBER}: ${runUrl}`,
+            `Report HTML: xem trong Artifacts của GitHub Actions.`
+          ];
+
+          curlJson("POST", `${jiraBase}/rest/api/3/issue/${issueKey}/comment`, {
+            body: makeAdfDoc(lines)
+          });
           console.log(`💬 Bug đã tồn tại (${issueKey}) cho [${bug.apiName}], đã comment vào bug cũ.`);
           commentedCount++;
         }
@@ -312,22 +323,23 @@ jobs:
         function createNewBug(bug, index) {
           const assigneeId = members.length > 0 ? members[index % members.length] : null;
 
-          const description =
-            `Hệ thống kiểm thử tự động phát hiện API bị lỗi.\n\n` +
-            `* Bộ kịch bản: ${bug.moduleName}\n` +
-            `* Tên API: ${bug.apiName}\n` +
-            `* Chi tiết lỗi: ${bug.errorMsg}\n\n` +
-            `---\n` +
-            `* Người kích hoạt build: ${process.env.ACTOR}\n` +
-            `* Nhánh code: ${process.env.BRANCH}\n` +
-            `* GitHub Actions Run #${process.env.RUN_NUMBER}: ${runUrl}\n` +
-            `* Báo cáo HTML: tải trong mục Artifacts trên GitHub Actions.`;
+          const descLines = [
+            `Hệ thống kiểm thử tự động phát hiện API bị lỗi.`,
+            `Bộ kịch bản: ${bug.moduleName}`,
+            `Tên API: ${bug.apiName}`,
+            `Chi tiết lỗi: ${bug.errorMsg}`,
+            `---`,
+            `Người kích hoạt build: ${process.env.ACTOR}`,
+            `Nhánh code: ${process.env.BRANCH}`,
+            `GitHub Actions Run #${process.env.RUN_NUMBER}: ${runUrl}`,
+            `Báo cáo HTML: tải trong mục Artifacts trên GitHub Actions.`
+          ];
 
           const jiraData = {
             fields: {
               project: { key: process.env.PROJECT_KEY },
               summary: bug.summary,
-              description,
+              description: makeAdfDoc(descLines),
               issuetype: { name: "Bug" },
               priority: { name: "High" },
               labels: [
@@ -343,7 +355,7 @@ jobs:
             jiraData.fields.assignee = { accountId: assigneeId };
           }
 
-          const res = curlJson("POST", `${jiraBase}/rest/api/2/issue`, jiraData);
+          const res = curlJson("POST", `${jiraBase}/rest/api/3/issue`, jiraData);
           if (res.key) {
             console.log(`✅ Đã tạo Bug mới [${bug.apiName}] (${res.key})`);
             createdCount++;
