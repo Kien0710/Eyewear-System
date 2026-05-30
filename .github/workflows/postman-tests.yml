@@ -74,7 +74,7 @@ jobs:
         done
 
     # =======================================================================
-    # BƯỚC 2: KHỞI TẠO NODE.JS ĐỂ PHỤC VỤ CHẠY NEWMAN API TEST
+    # BƯỚC 2: KHỞI TẠO NODE.JS ĐỂ CHẠY NEWMAN API TEST
     # =======================================================================
     - name: Setup Node.js Environment
       uses: actions/setup-node@v4
@@ -90,7 +90,7 @@ jobs:
       run: mkdir -p postman-reports
 
     # =======================================================================
-    # BƯỚC 3: KÍCH HOẠT QUÉT NEWMAN QUA FILE POSTMAN COLLECTION
+    # BƯỚC 3: CHẠY POSTMAN COLLECTION BẰNG NEWMAN
     # =======================================================================
     - name: Run Eyewear API Tests
       run: |
@@ -102,9 +102,11 @@ jobs:
           --suppress-exit-code
 
     # =======================================================================
-    # BƯỚC 4: SCRIPT LỌC LỖI KHI BẮN SANG JIRA
+    # BƯỚC 4: JIRA BUG DEDUPLICATION
+    # Nếu bug đã tồn tại và chưa DONE => chỉ comment, không tạo bug mới.
+    # Nếu chưa có bug đang mở => tạo bug mới.
     # =======================================================================
-    - name: Parse Failures and Assign Jira Bugs
+    - name: Update Jira Bugs Without Duplicates
       env:
         JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
         JIRA_USER_EMAIL: ${{ secrets.JIRA_GMAIL }}
@@ -112,135 +114,176 @@ jobs:
         PROJECT_KEY: 'ESQ'
         ACTOR: ${{ github.actor }}
         BRANCH: ${{ github.ref_name }}
+        RUN_ID: ${{ github.run_id }}
+        RUN_NUMBER: ${{ github.run_number }}
+        REPOSITORY: ${{ github.repository }}
       run: |
-        node -e '
+        node <<'NODE'
         const fs = require("fs");
         const { execSync } = require("child_process");
-        
-        const files = [
+
+        const reportFiles = [
           { name: "Eyewear API", file: "./postman-reports/summary-eyewear.json" }
         ];
-        
+
+        const requiredEnv = ["JIRA_BASE_URL", "JIRA_USER_EMAIL", "JIRA_API_TOKEN", "PROJECT_KEY"];
+        for (const key of requiredEnv) {
+          if (!process.env[key]) {
+            console.log(`⚠️ Missing env ${key}. Skip Jira update.`);
+            process.exit(0);
+          }
+        }
+
         const auth = Buffer.from(`${process.env.JIRA_USER_EMAIL}:${process.env.JIRA_API_TOKEN}`).toString("base64");
-        
-        // CHÚ Ý: Điền ID của các thành viên trong nhóm Jira vào mảng này
-        // Bạn có thể lấy Account ID của từng người bằng cách vào Jira -> Chọn 1 ticket bất kỳ -> Nhấp vào Assignee -> Nhìn vào URL hoặc gọi API.
+        const jiraBase = process.env.JIRA_BASE_URL.replace(/\/$/, "");
+
         const members = [
           "712020:ba3687e1-2a5e-4f18-8594-07315b414728",
           "712020:b2b9ed8a-a72a-43ae-8a12-1c5c7e599e08",
           "712020:0ad5e210-883e-4449-8daa-2d3b51029e4d",
           "712020:d335bfed-2162-4164-9e7f-172d5434d5b0",
-          // "712020:9645f74c-0db2-4301-a77a-f0f57c6244fd",
           "712020:83ddbb5b-a878-423a-8972-12137f84b4f3"
         ];
-        
-        let totalBugCount = 0;
+
+        function curlJson(method, url, body = null) {
+          const bodyPart = body ? `-d @-` : "";
+          const cmd = `curl -s -X ${method} -H "Authorization: Basic ${auth}" -H "Content-Type: application/json" ${bodyPart} "${url}"`;
+          const output = execSync(cmd, {
+            input: body ? JSON.stringify(body) : undefined,
+            encoding: "utf8",
+            maxBuffer: 1024 * 1024 * 10
+          });
+
+          if (!output || output.trim() === "") return {};
+          try {
+            return JSON.parse(output);
+          } catch (e) {
+            console.log("⚠️ Jira response is not JSON:", output.slice(0, 500));
+            return {};
+          }
+        }
+
+        function normalizeText(value) {
+          return String(value || "")
+            .replace(/[\r\n\t]+/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+        }
+
+        function escapeJqlText(value) {
+          return normalizeText(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+        }
+
+        const failures = [];
         const uniqueErrors = new Set();
-        const failuresToProcess = [];
-        
-        // Quét lọc lỗi duy nhất tránh rác bảng Jira
-        files.forEach(item => {
-          if (fs.existsSync(item.file)) {
-            const data = JSON.parse(fs.readFileSync(item.file, "utf8"));
-            if (data.run && data.run.failures && data.run.failures.length > 0) {
-              data.run.failures.forEach((fail) => {
-                const apiName = fail.source ? fail.source.name : "Không rõ API";
-                let assertionError = fail.error ? fail.error.message : "Lỗi Assert";
-                
-                assertionError = assertionError.replace(/[\r\n\"]+/g, " ");
-                const errorKey = `${item.name}|||${apiName}|||${assertionError}`;
-                
-                if (!uniqueErrors.has(errorKey)) {
-                  uniqueErrors.add(errorKey);
-                  failuresToProcess.push({
-                    moduleName: item.name,
-                    apiName: apiName,
-                    errorMsg: assertionError
-                  });
-                }
+
+        for (const item of reportFiles) {
+          if (!fs.existsSync(item.file)) continue;
+
+          const data = JSON.parse(fs.readFileSync(item.file, "utf8"));
+          const runFailures = data?.run?.failures || [];
+
+          for (const fail of runFailures) {
+            const apiName = normalizeText(fail?.source?.name || "Unknown API");
+            const errorMsg = normalizeText(fail?.error?.message || "Assertion failed");
+            const errorKey = `${item.name}|||${apiName}|||${errorMsg}`;
+
+            if (!uniqueErrors.has(errorKey)) {
+              uniqueErrors.add(errorKey);
+              failures.push({
+                moduleName: item.name,
+                apiName,
+                errorMsg,
+                summary: `❌ [CI/CD] Lỗi API: ${apiName} (${item.name})`
               });
             }
           }
-        });
-        
-        if (failuresToProcess.length === 0) {
-          console.log("✅ Không có lỗi nào cần tạo ticket.");
+        }
+
+        if (failures.length === 0) {
+          console.log("✅ Không có lỗi Newman nào cần cập nhật Jira.");
           process.exit(0);
         }
 
-        // Lấy TOÀN BỘ danh sách bug CI/CD đang mở trước khi xử lý (Tránh bị Jira Rate Limit chặn)
-        const allOpenBugs = [];
-        try {
-          const jql = `project = "${process.env.PROJECT_KEY}" AND statusCategory != Done AND summary ~ "CI/CD Lỗi API"`;
-          const searchUrl = `${process.env.JIRA_BASE_URL}/rest/api/2/search?jql=${encodeURIComponent(jql)}&maxResults=200`;
-          const searchCmd = `curl -s -X GET -H "Authorization: Basic ${auth}" -H "Content-Type: application/json" "${searchUrl}"`;
-          const searchRes = execSync(searchCmd, { encoding: "utf8" });
-          const searchJson = JSON.parse(searchRes);
-          if (searchJson.issues) {
-             allOpenBugs.push(...searchJson.issues);
-          }
-        } catch (e) {
-          console.error("Lỗi khi kéo danh sách bug từ Jira:", e.message);
+        const runUrl = `https://github.com/${process.env.REPOSITORY}/actions/runs/${process.env.RUN_ID}`;
+        let createdCount = 0;
+        let commentedCount = 0;
+
+        function findOpenBugBySummary(summary) {
+          const jql = `project = "${process.env.PROJECT_KEY}" AND issuetype = Bug AND statusCategory != Done AND summary ~ "${escapeJqlText(summary)}"`;
+          const url = `${jiraBase}/rest/api/2/search?jql=${encodeURIComponent(jql)}&maxResults=20&fields=summary,status`;
+          const res = curlJson("GET", url);
+          const issues = res.issues || [];
+
+          // Ưu tiên match chính xác summary để tránh bắt nhầm bug khác.
+          return issues.find(issue => issue?.fields?.summary === summary) || issues[0] || null;
         }
 
-        // Tiến hành bắn lệnh tạo thẻ đơn lẻ
-        failuresToProcess.forEach((bug) => {
-          
-          // --- ĐOẠN CHECK TRÙNG LẶP BUG TRÊN JIRA ---
-          const duplicateIssue = allOpenBugs.find(issue => 
-            issue.fields.summary && issue.fields.summary.includes(bug.apiName)
-          );
-          if (duplicateIssue) {
-             console.log(`⚠️ Bug cho API [${bug.apiName}] đã tồn tại và chưa đóng (${duplicateIssue.key}). Bỏ qua tạo mới.`);
-             return; // Skip tạo thẻ mới cho lỗi này
-          }
-          // ------------------------------------------
+        function commentExistingBug(issueKey, bug) {
+          const comment =
+            `CI/CD vẫn phát hiện lỗi này trong lần chạy mới.\n\n` +
+            `* API: ${bug.apiName}\n` +
+            `* Bộ test: ${bug.moduleName}\n` +
+            `* Lỗi: ${bug.errorMsg}\n` +
+            `* Người chạy: ${process.env.ACTOR}\n` +
+            `* Branch: ${process.env.BRANCH}\n` +
+            `* GitHub Actions Run #${process.env.RUN_NUMBER}: ${runUrl}\n` +
+            `* Report HTML: xem trong Artifacts của GitHub Actions.`;
 
-          let assigneeObj = undefined;
-          if (members && members.length > 0) {
-            const assigneeId = members[totalBugCount % members.length];
-            assigneeObj = { accountId: assigneeId };
-            totalBugCount++;
-          }
-          
-          const summary = `❌ [CI/CD] Lỗi API: ${bug.apiName} (${bug.moduleName})`;
+          curlJson("POST", `${jiraBase}/rest/api/2/issue/${issueKey}/comment`, { body: comment });
+          console.log(`💬 Bug đã tồn tại (${issueKey}) cho [${bug.apiName}], đã comment vào bug cũ.`);
+          commentedCount++;
+        }
 
-          const description = `Hệ thống kiểm thử tự động phát hiện ca assert này bị gãy:\n\n` +
-                              `* Bộ kịch bản: ${bug.moduleName}\n` +
-                              `* Tên API: ${bug.apiName}\n` +
-                              `* Chi tiết lỗi: {color:red}${bug.errorMsg}{color}\n\n` +
-                              `---\n` +
-                              `* Người kích hoạt build: ${process.env.ACTOR}\n` +
-                              `* Nhánh code: ${process.env.BRANCH}\n` +
-                              `* Chi tiết đồ thị: Tải file báo cáo HTML trong mục Artifacts trên GitHub.`;
-          
+        function createNewBug(bug, index) {
+          const assigneeId = members.length > 0 ? members[index % members.length] : null;
+
+          const description =
+            `Hệ thống kiểm thử tự động phát hiện API bị lỗi.\n\n` +
+            `* Bộ kịch bản: ${bug.moduleName}\n` +
+            `* Tên API: ${bug.apiName}\n` +
+            `* Chi tiết lỗi: ${bug.errorMsg}\n\n` +
+            `---\n` +
+            `* Người kích hoạt build: ${process.env.ACTOR}\n` +
+            `* Nhánh code: ${process.env.BRANCH}\n` +
+            `* GitHub Actions Run #${process.env.RUN_NUMBER}: ${runUrl}\n` +
+            `* Báo cáo HTML: tải trong mục Artifacts trên GitHub Actions.`;
+
           const jiraData = {
             fields: {
               project: { key: process.env.PROJECT_KEY },
-              summary: summary,
-              description: description,
+              summary: bug.summary,
+              description,
               issuetype: { name: "Bug" },
-              priority: { name: "High" }
+              priority: { name: "High" },
+              labels: ["ci-cd", "postman", "auto-detected"]
             }
           };
-          
-          if (assigneeObj) {
-            jiraData.fields.assignee = assigneeObj;
+
+          if (assigneeId) {
+            jiraData.fields.assignee = { accountId: assigneeId };
           }
-          
-          try {
-            const curlCommand = `curl -s -X POST -H "Authorization: Basic ${auth}" ` +
-                                `-H "Content-Type: application/json" ` +
-                                `-d @- "${process.env.JIRA_BASE_URL}/rest/api/2/issue"`;
-            
-            const response = execSync(curlCommand, { input: JSON.stringify(jiraData), encoding: "utf8" });
-            const resJson = JSON.parse(response);
-            console.log(`✅ Đã tạo Bug [${bug.apiName}] (${resJson.key})`);
-          } catch (error) {
-            console.error(`❌ Lỗi tạo thẻ cho API [${bug.apiName}]:`, error.message);
+
+          const res = curlJson("POST", `${jiraBase}/rest/api/2/issue`, jiraData);
+          if (res.key) {
+            console.log(`✅ Đã tạo Bug mới [${bug.apiName}] (${res.key})`);
+            createdCount++;
+          } else {
+            console.log(`❌ Không tạo được bug cho [${bug.apiName}]. Jira response:`, JSON.stringify(res).slice(0, 1000));
+          }
+        }
+
+        failures.forEach((bug, index) => {
+          const existingBug = findOpenBugBySummary(bug.summary);
+          if (existingBug) {
+            commentExistingBug(existingBug.key, bug);
+          } else {
+            createNewBug(bug, index);
           }
         });
-        '
+
+        console.log(`\n📌 Jira update done. Created: ${createdCount}, Commented existing: ${commentedCount}`);
+        NODE
 
     # ==========================================
     # ĐẨY BÁO CÁO LÊN ARTIFACTS
