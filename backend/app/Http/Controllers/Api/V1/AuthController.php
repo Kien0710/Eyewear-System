@@ -59,7 +59,7 @@ class AuthController extends BaseController
             $result = $this->authService->login($data);
             return ApiResponse::success([
                 'user' => $result['user'],
-                'token' => $result['token'],
+                'access_token' => $result['token'],
             ], 'Login successful');
         } catch (Exception $e) {
             $message = $e->getMessage();
