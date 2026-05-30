@@ -2,9 +2,9 @@ name: Postman API Tests & Jira Update
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 env:
   JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
@@ -38,14 +38,14 @@ jobs:
       - name: Setup PHP 8.3
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: "8.3"
           extensions: pdo, pdo_mysql, mbstring, openssl
 
       # 3. Install Node.js (for Newman)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       # 4. Install Newman (Postman CLI runner)
       - name: Install Newman
@@ -91,7 +91,7 @@ jobs:
           php -S 127.0.0.1:8000 -t backend/public &
           echo "Waiting for server to start..."
           sleep 3
-          
+
           # Verify server is actually running
           MAX_RETRIES=5
           RETRY_COUNT=0
@@ -104,7 +104,7 @@ jobs:
             echo "⏳ Server not ready yet ($RETRY_COUNT/$MAX_RETRIES), waiting..."
             sleep 2
           done
-          
+
           if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
             echo "❌ ERROR: Server failed to start after $MAX_RETRIES attempts!"
             exit 1
@@ -124,7 +124,7 @@ jobs:
             --timeout-request 10000 \
             --delay-request 500 \
             --bail || echo "⚠️ Newman tests completed with status: $?"
-          
+
           # Verify reports were created
           echo "Checking if reports exist..."
           if [ ! -f reports/test-report.html ]; then
@@ -199,7 +199,7 @@ jobs:
             ls -la reports/ 2>/dev/null || echo "reports/ directory does not exist"
             exit 0
           fi
-          
+
           # Đọc kết quả test
           if [ -f reports/test-results.json ]; then
             TOTAL=$(cat reports/test-results.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['run']['stats']['assertions']['total'])" 2>/dev/null || echo "?")

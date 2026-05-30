@@ -33,4 +33,4 @@ As outlined in the core documentation, the backend follows an N-layered architec
 - `database`: Schema SQL file
 - `public`: Entry points
 - `storage`: Log and temporary files
-- `TODO.md`: Development task list
+- `TODO.md`: Development task list.
