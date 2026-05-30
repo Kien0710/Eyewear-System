@@ -1,4 +1,7 @@
 -- Schema for Eyewear System
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
 
 CREATE TABLE IF NOT EXISTS role (
 	id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -25,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `user` (
 	status ENUM('active', 'inactive', 'blocked') DEFAULT 'inactive',
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS user_roles (
     user_id BIGINT UNSIGNED NOT NULL,
@@ -78,15 +81,15 @@ CREATE TABLE IF NOT EXISTS user_addresses (
 );
 
 DROP TABLE IF EXISTS `password_reset_tokens`;
-CREATE TABLE `password_reset_tokens` (
-	`id` int(11) NOT NULL AUTO_INCREMENT,
-	`email` varchar(150) NOT NULL,
-	`token` varchar(255) NOT NULL,
-	`created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-	PRIMARY KEY (`id`),
-	KEY `email` (`email`),
-	CONSTRAINT `fk_password_reset_user` FOREIGN KEY (`email`) REFERENCES `user` (`email`) ON DELETE CASCADE ON UPDATE CASCADE
-	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
+	id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	email VARCHAR(150) NOT NULL,
+	token VARCHAR(255) NOT NULL,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	INDEX idx_password_reset_email (email),
+	CONSTRAINT fk_password_reset_user FOREIGN KEY (email) REFERENCES `user`(email)
+		ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS category (
 	id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -535,3 +538,5 @@ SET @order_order_type_sql = IF(
 PREPARE stmt_order_order_type FROM @order_order_type_sql;
 EXECUTE stmt_order_order_type;
 DEALLOCATE PREPARE stmt_order_order_type;
+
+SET FOREIGN_KEY_CHECKS = 1;
