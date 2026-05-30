@@ -119,8 +119,13 @@ class AuthService
         $avatarStmt->execute([$user['id']]);
         $avatar = $avatarStmt->fetchColumn();
 
-        $tokenBody = $user['id'] . ':' . implode(',', $roles) . ':' . time();
-        $token = base64_encode($tokenBody);
+        // Generate secure token with HMAC (Fix ESQ-51: Token Forgery)
+        $jwtSecret = $_ENV['JWT_SECRET'] ?? 'default-secret-key-change-in-env';
+        $timestamp = time();
+        $roleString = implode(',', $roles) ?: 'none';
+        $tokenBody = $user['id'] . ':' . $roleString . ':' . $timestamp;
+        $signature = hash_hmac('sha256', $tokenBody, $jwtSecret);
+        $token = base64_encode($tokenBody . ':' . $signature);
 
         return [
             'user' => [
@@ -193,11 +198,31 @@ class AuthService
         }
 
         $parts = explode(':', $decoded);
-        if (count($parts) < 1 || !is_numeric($parts[0])) {
+        // Need at least: userId:roles:timestamp:signature (4 parts)
+        if (count($parts) < 4) {
             return null;
         }
 
-        return (int)$parts[0];
+        if (!is_numeric($parts[0])) {
+            return null;
+        }
+
+        // Verify HMAC signature (Fix ESQ-51: Token Forgery)
+        $jwtSecret = $_ENV['JWT_SECRET'] ?? 'default-secret-key-change-in-env';
+        $userId = $parts[0];
+        $roleString = $parts[1];
+        $timestamp = $parts[2];
+        $providedSignature = $parts[3];
+
+        $tokenBody = $userId . ':' . $roleString . ':' . $timestamp;
+        $expectedSignature = hash_hmac('sha256', $tokenBody, $jwtSecret);
+
+        // Constant-time comparison to prevent timing attacks
+        if (!hash_equals($expectedSignature, $providedSignature)) {
+            return null;
+        }
+
+        return (int)$userId;
     }
 
     public function verifyEmail(string $token): string
