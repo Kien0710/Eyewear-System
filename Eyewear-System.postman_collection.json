@@ -164,7 +164,7 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "pm.test('HTTP status is below 500', function () { pm.expect(pm.response.code).to.be.below(500); });",
+          "pm.test('HTTP status is Successful (200, 201, 204)', function () { pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]); });",
           "let json = null; try { json = pm.response.json(); } catch (e) {}",
           "if (json) pm.test('Response is valid JSON', function () { pm.expect(json).to.be.an('object'); });",
           "function dig(obj, keys) { if (!obj || typeof obj !== 'object') return undefined; for (const key of keys) { if (Object.prototype.hasOwnProperty.call(obj, key)) return obj[key]; } if (obj.data && typeof obj.data === 'object') return dig(obj.data, keys); return undefined; }",
@@ -185,7 +185,32 @@
             "method": "GET",
             "url": "{{baseUrl}}/health",
             "header": []
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "API Root",
@@ -193,7 +218,32 @@
             "method": "GET",
             "url": "{{baseUrl}}/",
             "header": []
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -215,7 +265,32 @@
               "mode": "raw",
               "raw": "{\n  \"name\": \"Postman Test User\",\n  \"email\": \"postman.test@example.com\",\n  \"password\": \"123456\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Login (Customer)",
@@ -225,6 +300,21 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});",
                   "var jsonData = pm.response.json();",
                   "if (jsonData.success && jsonData.data && jsonData.data.token) {",
                   "    pm.collectionVariables.set('authToken', jsonData.data.token);",
@@ -260,6 +350,21 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});",
                   "var jsonData = pm.response.json();",
                   "if (jsonData.success && jsonData.data && jsonData.data.token) {",
                   "    pm.collectionVariables.set('authToken', jsonData.data.token);",
@@ -302,7 +407,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Change Password",
@@ -327,7 +457,32 @@
               "mode": "raw",
               "raw": "{\n  \"current_password\": \"{{seedPassword}}\",\n  \"new_password\": \"{{seedPassword}}\",\n  \"confirm_password\": \"{{seedPassword}}\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Forgot Password",
@@ -344,7 +499,32 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{customerEmail}}\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Reset Password",
@@ -361,7 +541,32 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"token\": \"{{resetToken}}\",\n  \"password\": \"123456\",\n  \"password_confirmation\": \"123456\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Verify Email",
@@ -374,7 +579,32 @@
                 "value": "application/json"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Logout",
@@ -391,7 +621,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Login (Manager)",
@@ -415,6 +670,21 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});",
                   "const res = pm.response.json();",
                   "if (res.success && res.data && res.data.token) { pm.collectionVariables.set('managerToken', res.data.token); pm.collectionVariables.set('authToken', res.data.token); }"
                 ]
@@ -444,6 +714,21 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});",
                   "const res = pm.response.json();",
                   "if (res.success && res.data && res.data.token) { pm.collectionVariables.set('salesToken', res.data.token); pm.collectionVariables.set('authToken', res.data.token); }"
                 ]
@@ -473,6 +758,21 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});",
                   "const res = pm.response.json();",
                   "if (res.success && res.data && res.data.token) { pm.collectionVariables.set('operationsToken', res.data.token); pm.collectionVariables.set('authToken', res.data.token); }"
                 ]
@@ -490,56 +790,256 @@
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/products?page=1&per_page=12"
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get Product Detail (by ID)",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/products/{{productId}}"
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get Product Detail (by Slug)",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/products/{{productSlug}}"
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Featured Products",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/products/featured"
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get Categories",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/products/categories"
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get Brands",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/products/brands"
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Available Lenses",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/products/lenses/available"
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Related Products",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/products/related?exclude_id=1&limit=4"
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -561,7 +1061,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Profile",
@@ -586,7 +1111,32 @@
               "mode": "raw",
               "raw": "{\n  \"full_name\": \"Nguyen Van A\",\n  \"phone\": \"0901234567\",\n  \"birthdate\": \"1999-01-15\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Upload Avatar",
@@ -613,7 +1163,32 @@
                 }
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get Addresses",
@@ -630,7 +1205,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Add Address",
@@ -655,7 +1255,32 @@
               "mode": "raw",
               "raw": "{\n  \"label\": \"Home\",\n  \"phone\": \"0901234567\",\n  \"address\": \"123 Nguyen Trai, Q5, TP.HCM\",\n  \"is_default\": true\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Address",
@@ -680,7 +1305,32 @@
               "mode": "raw",
               "raw": "{\n  \"label\": \"Office\",\n  \"phone\": \"0909876543\",\n  \"address\": \"456 Le Loi, Q1, TP.HCM\",\n  \"is_default\": false\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Delete Address",
@@ -697,7 +1347,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -719,7 +1394,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Add to Cart",
@@ -744,7 +1444,32 @@
               "mode": "raw",
               "raw": "{\n  \"variant_id\": \"{{variantId}}\",\n  \"quantity\": 1,\n  \"lens_id\": null,\n  \"prescription_id\": null\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Cart Item Qty",
@@ -769,7 +1494,32 @@
               "mode": "raw",
               "raw": "{\n  \"quantity\": 2\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Toggle Item Selection",
@@ -794,7 +1544,32 @@
               "mode": "raw",
               "raw": "{\n  \"cart_item_id\": \"{{cartItemId}}\",\n  \"is_selected\": true\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Select All Items",
@@ -819,7 +1594,32 @@
               "mode": "raw",
               "raw": "{\n  \"is_selected\": true\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Apply Voucher",
@@ -844,7 +1644,32 @@
               "mode": "raw",
               "raw": "{\n  \"code\": \"WELCOME10\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Remove Voucher",
@@ -861,7 +1686,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Remove Cart Item",
@@ -878,7 +1728,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -900,7 +1775,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Toggle Wishlist Item",
@@ -925,7 +1825,32 @@
               "mode": "raw",
               "raw": "{\n  \"product_id\": \"{{productId}}\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Remove Wishlist Item",
@@ -942,7 +1867,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -972,7 +1922,32 @@
               "mode": "raw",
               "raw": "{\n  \"shipping_address\": \"123 Nguyen Trai, Q5, TP.HCM\",\n  \"billing_address\": \"123 Nguyen Trai, Q5, TP.HCM\",\n  \"payment_method\": \"cod\",\n  \"notes\": \"\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get My Orders",
@@ -989,7 +1964,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get Order Detail",
@@ -1006,7 +2006,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1028,7 +2053,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Create Prescription",
@@ -1053,7 +2103,32 @@
               "mode": "raw",
               "raw": "{\n  \"sph_od\": -1.50,\n  \"sph_os\": -2.00,\n  \"cyl_od\": -0.50,\n  \"cyl_os\": -0.75,\n  \"axis_od\": 180,\n  \"axis_os\": 175,\n  \"pd\": 63.5,\n  \"notes\": \"Prescription from Dr. Nguyen\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1083,7 +2158,32 @@
               "mode": "raw",
               "raw": "{\n  \"order_id\": \"{{orderId}}\",\n  \"method\": \"bank_transfer\",\n  \"amount\": 1500000\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get Payment Status",
@@ -1100,7 +2200,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "[Staff] Confirm Payment",
@@ -1125,7 +2250,32 @@
               "mode": "raw",
               "raw": "{\n  \"payment_id\": \"{{paymentId}}\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "[Staff] Pending Payments",
@@ -1142,7 +2292,32 @@
                 "value": "salesToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1164,7 +2339,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Create Ticket",
@@ -1189,7 +2389,32 @@
               "mode": "raw",
               "raw": "{\n  \"subject\": \"Issue with my order\",\n  \"message\": \"I received wrong product color\",\n  \"order_id\": 1\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get Ticket Detail",
@@ -1206,7 +2431,32 @@
                 "value": "customerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Reply to Ticket",
@@ -1231,7 +2481,32 @@
               "mode": "raw",
               "raw": "{\n  \"ticket_id\": 1,\n  \"message\": \"Please check the attached photo\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "[Staff] Update Ticket Status",
@@ -1256,7 +2531,32 @@
               "mode": "raw",
               "raw": "{\n  \"ticket_id\": \"{{ticketId}}\",\n  \"status\": \"in_progress\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "[Staff] Delete Ticket",
@@ -1281,7 +2581,32 @@
               "mode": "raw",
               "raw": "{\n  \"ticket_id\": \"{{ticketId}}\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1303,7 +2628,32 @@
                 "value": "salesToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get Order Detail (Staff)",
@@ -1320,7 +2670,32 @@
                 "value": "salesToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Verify Order",
@@ -1345,7 +2720,32 @@
               "mode": "raw",
               "raw": "{\n  \"order_id\": \"{{orderId}}\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Process Complaint",
@@ -1370,7 +2770,32 @@
               "mode": "raw",
               "raw": "{\n  \"order_id\": \"{{orderId}}\",\n  \"type\": \"return\",\n  \"reason\": \"Defective product\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get Order Complaints",
@@ -1387,7 +2812,32 @@
                 "value": "salesToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Prescription (Staff)",
@@ -1412,7 +2862,32 @@
               "mode": "raw",
               "raw": "{\n  \"order_item_id\": 1,\n  \"sph_od\": -1.25,\n  \"sph_os\": -1.50,\n  \"cyl_od\": -0.25,\n  \"cyl_os\": -0.50,\n  \"axis_od\": 180,\n  \"axis_os\": 170,\n  \"pd\": 62\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1434,7 +2909,32 @@
                 "value": "operationsToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Advance Production Step",
@@ -1459,7 +2959,32 @@
               "mode": "raw",
               "raw": "{\n  \"order_id\": \"{{orderId}}\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Create Shipment",
@@ -1484,7 +3009,32 @@
               "mode": "raw",
               "raw": "{\n  \"order_id\": \"{{orderId}}\",\n  \"courier\": \"GHTK\",\n  \"tracking_number\": \"TRK{{$timestamp}}\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Shipment",
@@ -1509,7 +3059,32 @@
               "mode": "raw",
               "raw": "{\n  \"shipment_id\": \"{{shipmentId}}\",\n  \"shipping_status\": \"shipping\",\n  \"tracking_number\": \"TRK{{$timestamp}}\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1531,7 +3106,32 @@
                 "value": "managerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get User by ID",
@@ -1548,7 +3148,32 @@
                 "value": "managerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Create Staff Account",
@@ -1573,7 +3198,32 @@
               "mode": "raw",
               "raw": "{\n  \"full_name\": \"Nhan Vien Moi\",\n  \"email\": \"staff@example.com\",\n  \"password\": \"password123\",\n  \"role_id\": 3\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update User (Status/Role)",
@@ -1598,7 +3248,32 @@
               "mode": "raw",
               "raw": "{\n  \"status\": \"active\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Delete Staff",
@@ -1615,7 +3290,32 @@
                 "value": "managerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "List Roles",
@@ -1632,7 +3332,32 @@
                 "value": "adminToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Set System Config",
@@ -1657,7 +3382,32 @@
               "mode": "raw",
               "raw": "{\n  \"key\": \"store_name\",\n  \"value\": \"EVELENS Eyewear\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get System Config",
@@ -1674,7 +3424,32 @@
                 "value": "adminToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1696,7 +3471,32 @@
                 "value": "managerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Stock",
@@ -1721,7 +3521,32 @@
               "mode": "raw",
               "raw": "{\n  \"updates\": [\n    {\"variant_id\": 1, \"quantity\": 50},\n    {\"variant_id\": 2, \"quantity\": 30}\n  ]\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1751,7 +3576,32 @@
               "mode": "raw",
               "raw": "{\n  \"name\": \"Postman Eyewear {{$timestamp}}\",\n  \"category_id\": 1,\n  \"base_price\": 890000,\n  \"brand\": \"EVELENS\",\n  \"gender\": \"unisex\",\n  \"description\": \"Created from Postman collection\"\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Product",
@@ -1776,7 +3626,32 @@
               "mode": "raw",
               "raw": "{\n  \"name\": \"Updated Postman Eyewear\",\n  \"base_price\": 950000\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Delete Product",
@@ -1793,7 +3668,32 @@
                 "value": "managerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Product (query id)",
@@ -1818,7 +3718,32 @@
               "mode": "raw",
               "raw": "{\n  \"name\": \"Updated by query id\",\n  \"base_price\": 960000\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Delete Product (query id)",
@@ -1835,7 +3760,32 @@
                 "value": "managerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1857,7 +3807,32 @@
                 "value": "managerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Create Voucher",
@@ -1882,7 +3857,32 @@
               "mode": "raw",
               "raw": "{\n  \"code\": \"PM{{$timestamp}}\",\n  \"title\": \"Postman Voucher\",\n  \"discount_type\": \"percentage\",\n  \"discount_value\": 20,\n  \"starts_at\": \"2026-01-01 00:00:00\",\n  \"ends_at\": \"2026-12-31 23:59:59\",\n  \"is_active\": 1\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Voucher",
@@ -1907,7 +3907,32 @@
               "mode": "raw",
               "raw": "{\n  \"title\": \"Updated Summer Sale\",\n  \"discount_value\": 25\n}"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Delete Voucher",
@@ -1924,7 +3949,32 @@
                 "value": "managerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1946,7 +3996,32 @@
                 "value": "managerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Operations Overview",
@@ -1963,7 +4038,32 @@
                 "value": "managerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Sales Report",
@@ -1980,7 +4080,32 @@
                 "value": "managerToken"
               }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is successful', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "});",
+                  "",
+                  "pm.test('Response follows standard schema', function () {",
+                  "    if(pm.response.code !== 204) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.be.an('object');",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     }
