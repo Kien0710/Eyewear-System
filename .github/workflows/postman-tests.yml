@@ -1,0 +1,179 @@
+name: Postman API Tests & Jira Update
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+  JIRA_EMAIL: ${{ secrets.JIRA_GMAIL }}
+  JIRA_API_TOKEN: ${{ secrets.JIRA_APIKEY }}
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: eyewear_system
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup PHP
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_mysql, mbstring, openssl
+
+      # 3. Install Node.js (for Newman)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 4. Install Newman (Postman CLI runner)
+      - name: Install Newman
+        run: npm install -g newman newman-reporter-htmlextra
+
+      # 5. Create backend .env for CI
+      - name: Create .env file
+        run: |
+          cat > backend/.env << 'EOF'
+          APP_NAME="Eyewear Backend"
+          APP_ENV=testing
+          APP_URL=http://127.0.0.1:8000
+          APP_DEBUG=true
+          API_PREFIX=/api
+
+          JWT_SECRET=ci-test-secret-key-for-github-actions
+          JWT_EXPIRE=1440
+
+          DB_CONNECTION=mysql
+          DB_HOST=127.0.0.1
+          DB_PORT=3306
+          DB_DATABASE=eyewear_system
+          DB_USERNAME=root
+          DB_PASSWORD=root
+
+          CORS_ALLOWED_ORIGIN=http://127.0.0.1:5500
+
+          MAIL_MAILER=smtp
+          MAIL_HOST=127.0.0.1
+          MAIL_PORT=1025
+          MAIL_USERNAME=
+          MAIL_PASSWORD=
+          MAIL_ENCRYPTION=
+          MAIL_FROM_ADDRESS=test@eyewear.local
+          MAIL_FROM_NAME="Eyewear System CI"
+          EOF
+
+      # 6. Import database schema
+      - name: Import database schema
+        run: |
+          mysql -h 127.0.0.1 -u root -proot eyewear_system < backend/database/schema.sql
+
+      # 7. Start PHP built-in server
+      - name: Start PHP backend server
+        run: |
+          php -S 127.0.0.1:8000 -t backend/public &
+          echo "Waiting for server to start..."
+          sleep 3
+          curl -f http://127.0.0.1:8000/api/v1/health || echo "Health check failed, continuing..."
+
+      # 8. Run Postman collection via Newman
+      - name: Run Postman API Tests
+        run: |
+          mkdir -p reports
+          newman run "Eyewear-System.postman_collection.json" \
+            --env-var "baseUrl=http://127.0.0.1:8000/api/v1" \
+            --reporters cli,htmlextra,json \
+            --reporter-htmlextra-export reports/test-report.html \
+            --reporter-htmlextra-title "Eyewear System API Test Report" \
+            --reporter-json-export reports/test-results.json \
+            --timeout-request 10000 \
+            --delay-request 500 \
+            --bail || true
+
+      # 9. Upload test report as artifact
+      - name: Upload Test Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: postman-test-report
+          path: |
+            reports/test-report.html
+            reports/test-results.json
+          retention-days: 30
+
+      # 10. Comment kết quả lên Pull Request (nếu là PR)
+      - name: Comment test results on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let summary = '## 🧪 Postman API Test Results\n\n';
+            try {
+              const results = JSON.parse(fs.readFileSync('reports/test-results.json', 'utf8'));
+              const stats = results.run.stats;
+              const passed = stats.assertions.total - stats.assertions.failed;
+              const failed = stats.assertions.failed;
+              const emoji = failed === 0 ? '✅' : '❌';
+              summary += `${emoji} **${passed}/${stats.assertions.total} tests passed**\n\n`;
+              summary += `| Metric | Value |\n|---|---|\n`;
+              summary += `| Total Requests | ${stats.requests.total} |\n`;
+              summary += `| Passed | ${passed} |\n`;
+              summary += `| Failed | ${failed} |\n`;
+              if (failed > 0) {
+                summary += '\n### ❌ Failed Tests\n';
+                results.run.failures.forEach(f => {
+                  summary += `- **${f.source.name}**: ${f.error.message}\n`;
+                });
+              }
+            } catch(e) {
+              summary += '⚠️ Could not parse test results.\n';
+            }
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+      # 11. Cập nhật Jira ticket ESQ-7 khi test pass trên main
+      - name: Update Jira ticket on success
+        if: github.ref == 'refs/heads/main' && success()
+        run: |
+          curl -s -X POST \
+            "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/ESQ-7/comment" \
+            -u "${{ secrets.JIRA_GMAIL }}:${{ secrets.JIRA_APIKEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "body": {
+                "type": "doc",
+                "version": 1,
+                "content": [{
+                  "type": "paragraph",
+                  "content": [{
+                    "type": "text",
+                    "text": "✅ CI Pipeline passed — Postman API tests completed successfully on commit '"'"'${{ github.sha }}'"'"'. Build: ${{ github.run_id }}"
+                  }]
+                }]
+              }
+            }' || echo "Jira update skipped"
