@@ -14,7 +14,7 @@ pipeline {
         PROJECT_KEY  = 'ESQ'
         SONAR_PROJECT_KEY  = 'eyewear-system'
         SONAR_PROJECT_NAME = 'Eyewear System'
-        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-21.0.10'
+        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-21.0.11'
     }
 
 
