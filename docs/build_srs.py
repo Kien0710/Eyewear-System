@@ -1,3 +1,5 @@
+import os
+
 from docx import Document
 from docx.enum.section import WD_SECTION
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_CELL_VERTICAL_ALIGNMENT
@@ -7,7 +9,8 @@ from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
 
 
-OUTPUT = "docs/SRS_Eyewear_System.docx"
+# Luôn lưu file cạnh script này, bất kể chạy từ thư mục nào
+OUTPUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "SRS_Eyewear_System.docx")
 
 
 def set_cell_shading(cell, fill):
@@ -22,7 +25,7 @@ def set_cell_shading(cell, fill):
 def set_cell_margins(cell, top=80, start=120, bottom=80, end=120):
     tc = cell._tc
     tc_pr = tc.get_or_add_tcPr()
-    tc_mar = tc_pr.first_child_found_in("w:tcMar")
+    tc_mar = tc_pr.find(qn("w:tcMar"))
     if tc_mar is None:
         tc_mar = OxmlElement("w:tcMar")
         tc_pr.append(tc_mar)
@@ -38,7 +41,7 @@ def set_cell_margins(cell, top=80, start=120, bottom=80, end=120):
 def set_table_borders(table, color="DADCE0", size="4"):
     tbl = table._tbl
     tbl_pr = tbl.tblPr
-    borders = tbl_pr.first_child_found_in("w:tblBorders")
+    borders = tbl_pr.find(qn("w:tblBorders"))
     if borders is None:
         borders = OxmlElement("w:tblBorders")
         tbl_pr.append(borders)
