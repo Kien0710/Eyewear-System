@@ -231,7 +231,7 @@ jobs:
 
         const runUrl = `https://github.com/${process.env.REPOSITORY}/actions/runs/${process.env.RUN_ID}`;
 
-        // ── Load open CI/CD bugs from Jira ────────────────────────────────
+        // ── Load open CI/CD bugs from Jira (for auto-close logic) ──────────
         function getOpenCiBugs() {
           const jql = `project = ${process.env.PROJECT_KEY} AND statusCategory != Done`;
           const url = `${jiraBase}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&maxResults=1000&fields=summary,status,labels,issuetype`;
@@ -251,11 +251,33 @@ jobs:
           });
         }
 
+        // ── Load ALL CI/CD bugs from Jira (for deduplication — includes Done) ──
+        function getAllCiBugs() {
+          const jql = `project = ${process.env.PROJECT_KEY} AND issuetype = Bug AND labels = "ci-cd" ORDER BY created DESC`;
+          const url = `${jiraBase}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&maxResults=1000&fields=summary,status,labels,issuetype`;
+          const res = curlJson("GET", url);
+          if (res.errorMessages || res.errors) {
+            console.log("⚠️ Jira all-bugs search error:", JSON.stringify(res).slice(0, 300));
+            return [];
+          }
+          return (res.issues || []).filter(i => {
+            const summary = normalize(i?.fields?.summary || "");
+            const type    = normalize(i?.fields?.issuetype?.name || "").toLowerCase();
+            return type === "bug" && (
+              summary.includes("[CI/CD]") ||
+              summary.includes("Lỗi API:")  ||
+              summary.includes("Loi API:")
+            );
+          });
+        }
+
         const openCiBugs = getOpenCiBugs();
-        console.log(`🔎 Found ${openCiBugs.length} open CI/CD bugs in Jira.`);
+        const allCiBugs  = getAllCiBugs();  // includes Done — used for dedup
+        console.log(`🔎 Found ${openCiBugs.length} open CI/CD bugs in Jira (${allCiBugs.length} total including closed).`);
 
         function findExistingBug(bug) {
-          return openCiBugs.find(i => {
+          // Search ALL bugs (including Done) to prevent duplicates when a fixed bug re-fails
+          return allCiBugs.find(i => {
             const summary = normalize(i?.fields?.summary || "");
             const labels  = i?.fields?.labels || [];
             return labels.includes(`api-${bug.bugKey}`)
