@@ -50,7 +50,7 @@ jobs:
         echo 'DB_USERNAME=root' >> backend/.env
         echo 'DB_PASSWORD=root' >> backend/.env
 
-    - name: Import database schema
+    - name: Import database schema and run seeder
       run: |
         if [ ! -f backend/database/schema.sql ]; then
           echo "❌ schema.sql not found! Aborting to prevent cascade test failures."
@@ -58,6 +58,11 @@ jobs:
         fi
         mysql -h 127.0.0.1 -u root -proot eyewear_system < backend/database/schema.sql
         echo "✅ Database schema imported successfully."
+        
+        # Run seeder to populate test data (users, products, etc.)
+        php backend/database/seeder.php
+        echo "✅ Database seeded successfully."
+
 
     - name: Start PHP backend server
       run: |
