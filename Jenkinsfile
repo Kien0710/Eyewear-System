@@ -205,67 +205,69 @@ pipeline {
         // ─────────────────────────────────────────────────────────
         stage('Notify Jira') {
             steps {
-                echo '📌 Posting build result to Jira...'
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'JIRA_CREDS',
-                        usernameVariable: 'JIRA_USER',
-                        passwordVariable: 'JIRA_TOKEN'
-                    ),
-                    string(credentialsId: 'JIRA_BASE_URL', variable: 'JIRA_URL')
-                ]) {
-                    script {
-                        def buildStatus  = currentBuild.currentResult ?: 'SUCCESS'
-                        def emoji        = buildStatus == 'SUCCESS' ? '✅' : '❌'
-                        def buildUrl     = env.BUILD_URL ?: 'N/A'
-                        def branch       = env.GIT_BRANCH ?: env.BRANCH_NAME ?: 'unknown'
-                        def sonarUrl     = env.SONAR_HOST_URL ? "${env.SONAR_HOST_URL}/dashboard?id=${SONAR_PROJECT_KEY}" : 'N/A'
+                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                    echo '📌 Posting build result to Jira...'
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'JIRA_CREDS',
+                            usernameVariable: 'JIRA_USER',
+                            passwordVariable: 'JIRA_TOKEN'
+                        ),
+                        string(credentialsId: 'JIRA_BASE_URL', variable: 'JIRA_URL')
+                    ]) {
+                        script {
+                            def buildStatus  = currentBuild.currentResult ?: 'SUCCESS'
+                            def emoji        = buildStatus == 'SUCCESS' ? '✅' : '❌'
+                            def buildUrl     = env.BUILD_URL ?: 'N/A'
+                            def branch       = env.GIT_BRANCH ?: env.BRANCH_NAME ?: 'unknown'
+                            def sonarUrl     = env.SONAR_HOST_URL ? "${env.SONAR_HOST_URL}/dashboard?id=${SONAR_PROJECT_KEY}" : 'N/A'
 
-                        def commentLines = [
-                            "${emoji} Jenkins Build #${BUILD_NUMBER} — ${buildStatus}",
-                            "Branch: ${branch}",
-                            "Build URL: ${buildUrl}",
-                            "SonarQube Report: ${sonarUrl}",
-                            "Triggered by: ${currentBuild.getBuildCauses()[0]?.shortDescription ?: 'unknown'}"
-                        ]
+                            def commentLines = [
+                                "${emoji} Jenkins Build #${BUILD_NUMBER} — ${buildStatus}",
+                                "Branch: ${branch}",
+                                "Build URL: ${buildUrl}",
+                                "SonarQube Report: ${sonarUrl}",
+                                "Triggered by: ${currentBuild.getBuildCauses()[0]?.shortDescription ?: 'unknown'}"
+                            ]
 
-                        def adfBody = groovy.json.JsonOutput.toJson([
-                            version: 1,
-                            type: 'doc',
-                            content: commentLines.collect { line ->
-                                [type: 'paragraph', content: [[type: 'text', text: line]]]
-                            }
-                        ])
+                            def adfBody = groovy.json.JsonOutput.toJson([
+                                version: 1,
+                                type: 'doc',
+                                content: commentLines.collect { line ->
+                                    [type: 'paragraph', content: [[type: 'text', text: line]]]
+                                }
+                            ])
 
-                        // Lấy danh sách bug đang mở của project
-                        def jqlEncoded = java.net.URLEncoder.encode(
-                            "project = ${PROJECT_KEY} AND statusCategory != Done AND issuetype = Bug AND labels = ci-cd",
-                            'UTF-8'
-                        )
-                        def jiraBase = JIRA_URL.replaceAll('/+$', '')
-                        def authB64  = "${JIRA_USER}:${JIRA_TOKEN}".bytes.encodeBase64().toString()
+                            // Lấy danh sách bug đang mở của project
+                            def jqlEncoded = java.net.URLEncoder.encode(
+                                "project = ${PROJECT_KEY} AND statusCategory != Done AND issuetype = Bug AND labels = ci-cd",
+                                'UTF-8'
+                            )
+                            def jiraBase = JIRA_URL.replaceAll('/+$', '')
+                            def authB64  = "${JIRA_USER}:${JIRA_TOKEN}".bytes.encodeBase64().toString()
 
-                        if (isUnix()) {
-                            sh """
-                                ISSUES=\$(curl -s -X GET \\
-                                    -H "Authorization: Basic ${authB64}" \\
-                                    -H "Content-Type: application/json" \\
-                                    "${jiraBase}/rest/api/3/search/jql?jql=${jqlEncoded}&maxResults=50&fields=summary" \\
-                                    | grep -o '"key":"[^"]*"' | grep -o 'ESQ-[0-9]*' | head -5)
-
-                                echo "Found Jira issues: \$ISSUES"
-
-                                for KEY in \$ISSUES; do
-                                    curl -s -X POST \\
+                            if (isUnix()) {
+                                sh """
+                                    ISSUES=\$(curl -s -X GET \\
                                         -H "Authorization: Basic ${authB64}" \\
                                         -H "Content-Type: application/json" \\
-                                        -d '{"body": ${adfBody}}' \\
-                                        "${jiraBase}/rest/api/3/issue/\$KEY/comment" > /dev/null
-                                    echo "📌 Notified Jira issue: \$KEY"
-                                done
-                            """
-                        } else {
-                            echo "⚠️ Jira notification via curl skipped on Windows agent. Configure Jira plugin instead."
+                                        "${jiraBase}/rest/api/3/search/jql?jql=${jqlEncoded}&maxResults=50&fields=summary" \\
+                                        | grep -o '"key":"[^"]*"' | grep -o 'ESQ-[0-9]*' | head -5)
+
+                                    echo "Found Jira issues: \$ISSUES"
+
+                                    for KEY in \$ISSUES; do
+                                        curl -s -X POST \\
+                                            -H "Authorization: Basic ${authB64}" \\
+                                            -H "Content-Type: application/json" \\
+                                            -d '{"body": ${adfBody}}' \\
+                                            "${jiraBase}/rest/api/3/issue/\$KEY/comment" > /dev/null
+                                        echo "📌 Notified Jira issue: \$KEY"
+                                    done
+                                """
+                            } else {
+                                echo "⚠️ Jira notification via curl skipped on Windows agent. Configure Jira plugin instead."
+                            }
                         }
                     }
                 }

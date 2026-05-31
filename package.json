@@ -2,5 +2,27 @@
   "devDependencies": {
     "codeceptjs": "^4.0.3",
     "playwright": "^1.60.0"
-  }
+  },
+  "name": "eyewear-system-1",
+  "version": "1.0.0",
+  "description": "test jira link\r # Eyewear System UTH",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kien0710/Eyewear-System.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kien0710/Eyewear-System/issues"
+  },
+  "homepage": "https://github.com/Kien0710/Eyewear-System#readme"
 }

@@ -46,12 +46,12 @@ Router::group(['prefix' => 'api/v1'], function () {
 
     // --- PUBLIC PRODUCT ROUTES ---
     Router::group(['prefix' => 'products'], function () {
-        Router::post('/', [ProductController::class, 'index']);
-        Router::post('featured', [ProductController::class, 'featured']);
-        Router::post('categories', [CategoryController::class, 'index']);
-        Router::post('brands', [ProductController::class, 'brands']);
-        Router::post('lenses/available', [LensController::class, 'available']);
-        Router::post('related', [ProductController::class, 'related']);
+        Router::get('/', [ProductController::class, 'index']);
+        Router::get('featured', [ProductController::class, 'featured']);
+        Router::get('categories', [CategoryController::class, 'index']);
+        Router::get('brands', [ProductController::class, 'brands']);
+        Router::get('lenses/available', [LensController::class, 'available']);
+        Router::get('related', [ProductController::class, 'related']);
         Router::get('{id}', [ProductController::class, 'show']);
     });
 
