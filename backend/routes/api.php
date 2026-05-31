@@ -55,14 +55,15 @@ Router::group(['prefix' => 'api/v1'], function () {
         Router::get('{id}', [ProductController::class, 'show']);
     });
 
-    // --- PROTECTED PROFILE & ADDRESS ROUTES ---
+     // --- PROTECTED PROFILE & ADDRESS ROUTES ---
     Router::group(['prefix' => 'profile', 'middleware' => ['auth:sanctum', 'permission:manage_profile']], function () {
-        Router::post('/', [ProfileController::class, 'show']);
-        Router::post('/', [ProfileController::class, 'update']);
+    
+        Router::get('/', [ProfileController::class, 'show']);      // Get Profile
+        Router::put('/', [ProfileController::class, 'update']);    // Update Profile
         Router::put('avatar', [ProfileController::class, 'uploadAvatar']);
-        
-        Router::post('addresses', [AddressController::class, 'index']);
-        Router::post('addresses', [AddressController::class, 'store']);
+    
+        Router::get('addresses', [AddressController::class, 'index']);   // List addresses
+        Router::post('addresses', [AddressController::class, 'store']);  // Add address
         Router::put('addresses/{id}', [AddressController::class, 'update']);
         Router::delete('addresses/{id}', [AddressController::class, 'destroy']);
     });
