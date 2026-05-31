@@ -92,7 +92,7 @@ Router::group(['prefix' => 'api/v1'], function () {
 
         // Checkout & Orders
         Router::group(['prefix' => 'checkout', 'middleware' => 'permission:checkout'], function () {
-            Router::get('/', [CheckoutController::class, 'store']);
+            Router::post('/', [CheckoutController::class, 'store']);
         });
 
         Router::group(['prefix' => 'orders'], function () {
