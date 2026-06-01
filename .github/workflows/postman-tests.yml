@@ -234,6 +234,16 @@ jobs:
           for (const exec of (data?.run?.executions || [])) {
             const apiName = normalize(exec?.item?.name || "");
             if (apiName && !failedApis.has(apiName)) passedApis.add(apiName);
+            
+            const key = `${item.name}|||${apiName}`;
+            if (apiName && failuresMap.has(key)) {
+              const failObj = failuresMap.get(key);
+              if (!failObj.details) {
+                let reqBody = exec?.request?.body?.raw ? "\\nPayload:\\n" + exec.request.body.raw.replace(/\\n/g, "\\n") : "";
+                if (reqBody.length > 500) reqBody = reqBody.substring(0, 500) + "... (truncated)";
+                failObj.details = `Method: ${exec?.request?.method || "UNKNOWN"}\\nURL: ${exec?.request?.url?.raw || "UNKNOWN URL"}${reqBody}\\nResponse Code: ${exec?.response?.code || "UNKNOWN"}`;
+              }
+            }
           }
         }
         
@@ -383,7 +393,8 @@ jobs:
                   "Hệ thống kiểm thử tự động phát hiện API bị lỗi.",
                   `Bộ kịch bản: ${bug.moduleName}`,
                   `Tên API: ${bug.apiName}`,
-                  `Chi tiết lỗi: ${bug.errorMsg}`,
+                  `Thông tin Request/Response:\\n${bug.details || "Không có"}`,
+                  `Chi tiết các lỗi:\\n- ${bug.errorMsg}`,
                   "---",
                   `Người kích hoạt build: ${process.env.ACTOR}`,
                   `Nhánh code: ${process.env.BRANCH}`,
