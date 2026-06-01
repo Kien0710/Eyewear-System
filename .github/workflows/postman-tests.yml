@@ -202,8 +202,7 @@ jobs:
         // ── Parse Newman report ───────────────────────────────────────────
         const failedApis   = new Set();
         const passedApis   = new Set();
-        const failures     = [];
-        const uniqueErrors = new Set();
+        const failuresMap  = new Map();
 
         for (const item of reportFiles) {
           if (!fs.existsSync(item.file)) {
@@ -215,17 +214,21 @@ jobs:
           for (const fail of (data?.run?.failures || [])) {
             const apiName  = normalize(fail?.source?.name || "Unknown API");
             const errorMsg = normalize(fail?.error?.message || "Assertion failed");
-            const key      = `${item.name}|||${apiName}|||${errorMsg}`;
-            if (uniqueErrors.has(key)) continue;
-            uniqueErrors.add(key);
+            const key      = `${item.name}|||${apiName}`;
+            
             failedApis.add(apiName);
-            failures.push({
-              moduleName: item.name,
-              apiName,
-              errorMsg,
-              bugKey: slugify(`${item.name}-${apiName}`),
-              summary: `❌ [CI/CD] Lỗi API: ${apiName} (${item.name})`
-            });
+            
+            if (!failuresMap.has(key)) {
+              failuresMap.set(key, {
+                moduleName: item.name,
+                apiName,
+                errorMsgs: [errorMsg],
+                bugKey: slugify(`${item.name}-${apiName}`),
+                summary: `❌ [CI/CD] Lỗi API: ${apiName} (${item.name})`
+              });
+            } else {
+              failuresMap.get(key).errorMsgs.push(errorMsg);
+            }
           }
 
           for (const exec of (data?.run?.executions || [])) {
@@ -233,6 +236,12 @@ jobs:
             if (apiName && !failedApis.has(apiName)) passedApis.add(apiName);
           }
         }
+        
+        const failures = Array.from(failuresMap.values()).map(f => {
+          // Remove duplicate error messages inside the array
+          f.errorMsg = [...new Set(f.errorMsgs)].join("\\n- ");
+          return f;
+        });
 
         const runUrl = `https://github.com/${process.env.REPOSITORY}/actions/runs/${process.env.RUN_ID}`;
 
