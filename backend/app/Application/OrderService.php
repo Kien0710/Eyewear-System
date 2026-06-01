@@ -69,7 +69,7 @@ class OrderService
         $stmt = $db->prepare(
             'SELECT o.id, o.order_number, o.status, o.total_amount, o.placed_at, o.production_step,
                     p.payment_method, COALESCE(p.status, o.status) AS payment_status
-             FROM `orders` o
+             FROM `order` o
              LEFT JOIN payment p ON p.order_id = o.id
              WHERE o.user_id = ?
              ORDER BY o.placed_at DESC'
