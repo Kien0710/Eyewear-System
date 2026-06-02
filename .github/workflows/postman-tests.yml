@@ -258,7 +258,7 @@ jobs:
         // ── Load open CI/CD bugs from Jira (for auto-close logic) ──────────
         function getOpenCiBugs() {
           const jql = `project = ${process.env.PROJECT_KEY} AND statusCategory != Done`;
-          const url = `${jiraBase}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&maxResults=1000&fields=summary,status,labels,issuetype`;
+          const url = `${jiraBase}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&maxResults=1000&fields=summary,status,labels,issuetype,assignee`;
           const res = curlJson("GET", url);
           if (res.errorMessages || res.errors) {
             console.log("❌ Jira search error:", JSON.stringify(res).slice(0, 500));
@@ -278,7 +278,7 @@ jobs:
         // ── Load ALL CI/CD bugs from Jira (for deduplication — includes Done) ──
         function getAllCiBugs() {
           const jql = `project = ${process.env.PROJECT_KEY} AND issuetype = Bug AND labels = "ci-cd" ORDER BY created DESC`;
-          const url = `${jiraBase}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&maxResults=1000&fields=summary,status,labels,issuetype`;
+          const url = `${jiraBase}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&maxResults=1000&fields=summary,status,labels,issuetype,assignee`;
           const res = curlJson("GET", url);
           if (res.errorMessages || res.errors) {
             console.log("⚠️ Jira all-bugs search error:", JSON.stringify(res).slice(0, 300));
