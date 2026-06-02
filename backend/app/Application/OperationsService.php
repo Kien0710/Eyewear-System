@@ -96,7 +96,17 @@ class OperationsService
 			throw new \Exception('Shipment already exists for this order');
 		}
 
-		if ($order->production_step !== 'ready_to_ship' && $order->status !== 'shipped' && $order->status !== 'delivered') {
+		$db = Database::getInstance();
+		$stmt = $db->prepare("SELECT COUNT(*) FROM orderitem WHERE order_id = ? AND (lens_id IS NOT NULL OR prescription_id IS NOT NULL)");
+		$stmt->execute([$orderId]);
+		$needsLab = (int) $stmt->fetchColumn() > 0;
+
+		$readyForShip = $order->status === 'shipped'
+			|| $order->status === 'delivered'
+			|| $order->production_step === 'ready_to_ship'
+			|| (!$needsLab && $order->production_step === 'packaging');
+
+		if (!$readyForShip) {
 			throw new \Exception('Order must complete all production steps before shipping');
 		}
 
