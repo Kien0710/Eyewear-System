@@ -233,7 +233,7 @@ jobs:
 
           for (const exec of (data?.run?.executions || [])) {
             const apiName = normalize(exec?.item?.name || "");
-            if (apiName && !failedApis.has(apiName)) passedApis.add(apiName);
+            if (apiName && !failedApis.has(apiName)) passedApis.add(`${item.name}|||${apiName}`);
             
             const key = `${item.name}|||${apiName}`;
             if (apiName && failuresMap.has(key)) {
@@ -342,9 +342,10 @@ jobs:
           const labels  = issue?.fields?.labels || [];
           let matched   = false;
 
-          for (const apiName of passedApis) {
-            const bk = slugify(`Eyewear API-${apiName}`);
-            if (labels.includes(`api-${bk}`) || (summary.includes("[CI/CD]") && summary.includes(apiName))) {
+          for (const passedKey of passedApis) {
+            const [modName, apiName] = passedKey.split("|||");
+            const bk = slugify(`${modName}-${apiName}`);
+            if (labels.includes(`api-${bk}`) || (summary.includes("[CI/CD]") && summary.includes(apiName) && summary.includes(modName))) {
               matched = true;
               break;
             }
