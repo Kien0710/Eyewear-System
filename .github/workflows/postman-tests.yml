@@ -373,8 +373,24 @@ jobs:
           const existing = findExistingBug(bug);
 
           if (existing) {
+            // Reopen if bug was already marked as Done
+            const statusName = (existing?.fields?.status?.statusCategory?.name || "").toLowerCase();
+            const statusKey = (existing?.fields?.status?.statusCategory?.key || "").toLowerCase();
+            
+            if (statusName === "done" || statusKey === "done") {
+              const transRes = curlJson("GET", `${jiraBase}/rest/api/3/issue/${existing.key}/transitions`);
+              const reopen = (transRes.transitions || []).find(t => 
+                ["to do", "reopen", "in progress", "open", "backlog"].includes(normalize(t.name).toLowerCase())
+              ) || (transRes.transitions || [])[0]; // fallback to first available if specific ones not found
+              
+              if (reopen) {
+                curlJson("POST", `${jiraBase}/rest/api/3/issue/${existing.key}/transitions`, { transition: { id: reopen.id } });
+                console.log(`🔄 Reopened ${existing.key} (Transition: ${reopen.name})`);
+              }
+            }
+
             const action = upsertComment(existing.key, [
-              "⚠️ CI/CD vẫn phát hiện lỗi này trong lần chạy mới.",
+              "⚠️ CI/CD vẫn phát hiện lỗi này trong lần chạy mới (Bug tái diễn - Reopened).",
               `API: ${bug.apiName}`,
               `Bộ test: ${bug.moduleName}`,
               `Lỗi: ${bug.errorMsg}`,
