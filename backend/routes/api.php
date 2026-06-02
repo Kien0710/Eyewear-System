@@ -60,7 +60,7 @@ Router::group(['prefix' => 'api/v1'], function () {
     
         Router::get('/', [ProfileController::class, 'show']);      // Get Profile
         Router::put('/', [ProfileController::class, 'update']);    // Update Profile
-        Router::put('avatar', [ProfileController::class, 'uploadAvatar']);
+        Router::post('avatar', [ProfileController::class, 'uploadAvatar']);
     
         Router::get('addresses', [AddressController::class, 'index']);   // List addresses
         Router::post('addresses', [AddressController::class, 'store']);  // Add address

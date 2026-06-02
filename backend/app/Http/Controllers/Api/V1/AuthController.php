@@ -131,7 +131,6 @@ class AuthController extends BaseController
 
     public function me()
     {
-        return \Core\ApiResponse::serverError('Redis connection lost when fetching session');
         $userId = $this->getUserId();
         if (!$userId) {
             return ApiResponse::unauthorized();
@@ -159,7 +158,6 @@ class AuthController extends BaseController
 
     public function changePassword()
     {
-        return \Core\ApiResponse::validationError(['password' => ['Password must contain at least 1 special character']]);
         $userId = $this->getUserId();
         if (!$userId) {
             return ApiResponse::unauthorized();
