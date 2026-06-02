@@ -377,25 +377,25 @@ jobs:
             const statusName = (existing?.fields?.status?.statusCategory?.name || "").toLowerCase();
             const statusKey = (existing?.fields?.status?.statusCategory?.key || "").toLowerCase();
             
-            if (statusName === "done" || statusKey === "done") {
+            if (statusName === "done" || statusKey === "done" || statusName === "to do" || statusKey === "to do") {
               const transRes = curlJson("GET", `${jiraBase}/rest/api/3/issue/${existing.key}/transitions`);
               const transitions = transRes.transitions || [];
               
-              // Nếu task đã có Assignee (có người làm/có nhánh), ưu tiên In Progress. Ngược lại ưu tiên To Do.
+              // Cải tiến: Thêm các biến thể của "In Progress" (vd: start progress, đang xử lý)
               const targetNames = existing?.fields?.assignee 
-                ? ["in progress", "reopen", "open", "to do", "backlog"]
+                ? ["in progress", "start progress", "đang xử lý", "reopen", "open", "to do", "backlog"]
                 : ["to do", "backlog", "open", "in progress"];
                 
               let reopen = null;
               for (const name of targetNames) {
-                reopen = transitions.find(t => normalize(t.name).toLowerCase() === name);
+                reopen = transitions.find(t => normalize(t.name).toLowerCase() === name || normalize(t.name).toLowerCase().includes(name));
                 if (reopen) break;
               }
               if (!reopen) reopen = transitions[0]; // fallback
               
-              if (reopen) {
+              if (reopen && (statusName === "done" || statusKey === "done" || (existing?.fields?.assignee && !reopen.name.toLowerCase().includes("to do")))) {
                 curlJson("POST", `${jiraBase}/rest/api/3/issue/${existing.key}/transitions`, { transition: { id: reopen.id } });
-                console.log(`🔄 Reopened ${existing.key} (Transition: ${reopen.name})`);
+                console.log(`🔄 Moved ${existing.key} to (Transition: ${reopen.name})`);
               }
             }
 
