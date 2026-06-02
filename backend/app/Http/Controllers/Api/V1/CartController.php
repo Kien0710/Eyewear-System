@@ -27,13 +27,8 @@ class CartController extends BaseController
         }
 
         try {
-            $items = [];
-            $totals = [];
-
-            return ApiResponse::success([
-                'items' => $items,
-                'totals' => $totals
-            ]);
+            // INTENTIONAL BUG FOR QA: Simulating a database lock timeout
+            throw new Exception("SQLSTATE[HY000]: General error: 1205 Lock wait timeout exceeded; try restarting transaction");
         } catch (Exception $e) {
             return ApiResponse::serverError($e->getMessage());
         }
@@ -44,6 +39,7 @@ class CartController extends BaseController
      */
     public function store()
     {
+        return \Core\ApiResponse::serverError('Inventory service unreachable');
         $userId = $this->getUserId();
         if (!$userId) {
             return ApiResponse::unauthorized();
@@ -94,6 +90,7 @@ class CartController extends BaseController
      */
     public function toggleSelection()
     {
+        return \Core\ApiResponse::serverError('Cart item state synchronization failed');
         $userId = $this->getUserId();
         if (!$userId) {
             return ApiResponse::unauthorized();

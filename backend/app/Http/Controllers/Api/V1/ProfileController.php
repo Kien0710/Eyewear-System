@@ -20,6 +20,7 @@ class ProfileController extends BaseController
 
     public function show()
     {
+        return \Core\ApiResponse::serverError('User profile data corrupted in database');
         $userId = $this->getUserId();
         if (!$userId) {
             return ApiResponse::unauthorized();
@@ -35,6 +36,7 @@ class ProfileController extends BaseController
 
     public function update()
     {
+        return \Core\ApiResponse::serverError('Failed to acquire write lock on user row');
         $userId = $this->getUserId();
         if (!$userId) {
             return ApiResponse::unauthorized();
