@@ -80,6 +80,8 @@ Router::group(['prefix' => 'api/v1'], function () {
             Router::put('items/{id}', [CartController::class, 'update']);
             Router::delete('items/{id}', [CartController::class, 'destroy']);
             Router::post('toggle-selection', [CartController::class, 'toggleSelection']);
+            Router::put('toggle-selection', [CartController::class, 'toggleSelection']);
+            Router::patch('toggle-selection', [CartController::class, 'toggleSelection']);
             Router::post('select-all', [CartController::class, 'selectAll']);
         });
 

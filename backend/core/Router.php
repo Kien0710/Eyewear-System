@@ -50,6 +50,12 @@ class Router
         return new static();
     }
 
+    public static function patch(string $uri, array $action): self
+    {
+        self::addRoute('PATCH', $uri, $action);
+        return new static();
+    }
+
     public static function delete(string $uri, array $action): self
     {
         self::addRoute('DELETE', $uri, $action);
