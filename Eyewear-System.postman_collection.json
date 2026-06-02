@@ -2357,9 +2357,10 @@
                   "} catch(e) {}",
                   "",
                   "",
-                  "if (res.success && res.data) {",
-                  "    const oid = res.data.order_id || res.data.id;",
-                  "    if (oid) pm.collectionVariables.set('orderId', String(oid));",
+                  "// --- Retained custom extraction logic ---",
+                  "if (!isNegative && pm.response.code !== 204) {",
+                  "    const res = pm.response.json();",
+                  "    pm.collectionVariables.set('orderId', String(res.data.order_id));",
                   "}"
                 ]
               }
