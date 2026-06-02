@@ -21,7 +21,7 @@ class ProductController extends BaseController
     public function index()
     {
         // INTENTIONAL BUG FOR QA: Simulating a broken mapping layer
-        return ApiResponse::serverError('Undefined array key "price" in ProductMapper.php');
+        return ApiResponse::success($this->catalogService->searchProducts(['per_page' => $this->query('per_page', 12), 'page' => $this->query('page', 1)]));
     }
 
     /**
@@ -29,7 +29,7 @@ class ProductController extends BaseController
      */
     public function show($id = null)
     {
-        return \Core\ApiResponse::notFound('Product visibility is restricted due to geo-blocking rule');
+        // Removed intentional bug
         $identifier = $id ?? $this->query('id') ?? $this->query('slug');
 
         if ($identifier === null || $identifier === '') {
@@ -121,7 +121,7 @@ class ProductController extends BaseController
 
     public function featured()
     {
-        return \Core\ApiResponse::serverError('Elasticsearch cluster is down');
+        // Removed intentional bug
         try {
             $newReleases = $this->catalogService->searchProducts(['per_page' => 8, 'sort' => 'newest', 'in_stock' => true]);
             $deals = $this->catalogService->searchProducts(['per_page' => 8, 'sort' => 'random', 'in_stock' => true]);
