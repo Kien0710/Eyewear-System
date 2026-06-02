@@ -18,8 +18,7 @@ class AddressController extends BaseController
 
     public function index()
     {
-        return \Core\ApiResponse::serverError('Cannot map user addresses: missing join key');
-        $userId = $this->getUserId();
+        $userId = $this->requireAuth();
         if (!$userId) {
             return ApiResponse::unauthorized();
         }
@@ -34,8 +33,7 @@ class AddressController extends BaseController
 
     public function store()
     {
-        return \Core\ApiResponse::validationError(['phone' => ['Invalid phone number format for region']]);
-        $userId = $this->getUserId();
+        $userId = $this->requireAuth();
         if (!$userId) {
             return ApiResponse::unauthorized();
         }
@@ -51,7 +49,7 @@ class AddressController extends BaseController
 
     public function update($id)
     {
-        $userId = $this->getUserId();
+        $userId = $this->requireAuth();
         if (!$userId) {
             return ApiResponse::unauthorized();
         }
@@ -67,7 +65,7 @@ class AddressController extends BaseController
 
     public function destroy($id)
     {
-        $userId = $this->getUserId();
+        $userId = $this->requireAuth();
         if (!$userId) {
             return ApiResponse::unauthorized();
         }
