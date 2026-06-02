@@ -656,7 +656,10 @@ try {
             ('Nguyen Van A', 'vana@gmail.com', '$passHash', 'active'),
             ('Tran Thi B', 'thib@gmail.com', '$passHash', 'active'),
             ('Le Van C', 'vanc@gmail.com', '$passHash', 'active')
-        ON DUPLICATE KEY UPDATE full_name = VALUES(full_name);
+            ON DUPLICATE KEY UPDATE
+                full_name = VALUES(full_name),
+                password_hash = VALUES(password_hash),
+                status = VALUES(status);
     ");
 
     $adminId = $pdo->query("SELECT id FROM `user` WHERE email = 'admin@eyewear.com'")->fetchColumn();
