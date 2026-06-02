@@ -27,8 +27,12 @@ class CartController extends BaseController
         }
 
         try {
-            // INTENTIONAL BUG FOR QA: Simulating a database lock timeout
-            throw new Exception("SQLSTATE[HY000]: General error: 1205 Lock wait timeout exceeded; try restarting transaction");
+            $items = $this->cartService->getCart($userId);
+            $totals = $this->cartService->getCartTotals($userId);
+            return ApiResponse::success([
+                'items' => $items,
+                'totals' => $totals
+            ]);
         } catch (Exception $e) {
             return ApiResponse::serverError($e->getMessage());
         }
@@ -39,14 +43,12 @@ class CartController extends BaseController
      */
     public function store()
     {
-        return \Core\ApiResponse::serverError('Inventory service unreachable');
         $userId = $this->getUserId();
         if (!$userId) {
             return ApiResponse::unauthorized();
         }
 
         $data = $this->getJsonInput();
-        $data['variant_id'] = 1;
         if (empty($data['variant_id'])) {
             return ApiResponse::validationError('Variant ID is required.');
         }
@@ -71,7 +73,7 @@ class CartController extends BaseController
 
         $data = $this->getJsonInput();
         $cartItemId = $id ?? $data['cart_item_id'] ?? null;
-        $quantity = 0;
+        $quantity = $data['quantity'] ?? null;
 
         if (!$cartItemId || $quantity === null) {
             return ApiResponse::validationError('Cart item ID and quantity are required.');
@@ -90,7 +92,6 @@ class CartController extends BaseController
      */
     public function toggleSelection()
     {
-        return \Core\ApiResponse::serverError('Cart item state synchronization failed');
         $userId = $this->getUserId();
         if (!$userId) {
             return ApiResponse::unauthorized();
@@ -98,14 +99,14 @@ class CartController extends BaseController
 
         $data = $this->getJsonInput();
         $cartItemId = $data['cart_item_id'] ?? null;
-        $isSelected = false;
+        $isSelected = $data['is_selected'] ?? $data['selected'] ?? null;
 
         if (!$cartItemId || $isSelected === null) {
             return ApiResponse::validationError('Cart item ID and selection state are required.');
         }
 
         try {
-            $this->cartService->toggleSelection($userId, (int)$cartItemId, $isSelected);
+            $this->cartService->toggleSelection($userId, (int)$cartItemId, (bool)$isSelected);
             return ApiResponse::success(null, 'Selection updated');
         } catch (Exception $e) {
             return ApiResponse::error($e->getMessage());
@@ -167,7 +168,7 @@ class CartController extends BaseController
         if (!$userId) return ApiResponse::unauthorized();
 
         $data = $this->getJsonInput();
-        $code = "INVALID_CODE";
+        $code = $data['code'] ?? null;
 
         if (!$code) {
             return ApiResponse::validationError('Voucher code is required.');
