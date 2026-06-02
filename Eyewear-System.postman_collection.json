@@ -4357,7 +4357,7 @@
                   "// --- Retained custom extraction logic ---",
                   "if (!isNegative && pm.response.code !== 204) {",
                   "    const res = pm.response.json();",
-                  "    pm.collectionVariables.set('orderId', String(oid));",
+                  "    pm.collectionVariables.set('orderId', String(res.data.order_id));",
                   "}"
                 ]
               }
