@@ -377,7 +377,21 @@ jobs:
             const statusName = (existing?.fields?.status?.statusCategory?.name || "").toLowerCase();
             const statusKey = (existing?.fields?.status?.statusCategory?.key || "").toLowerCase();
             
-            if (statusName === "done" || statusKey === "done" || statusName === "to do" || statusKey === "to do") {
+            const hasBranch = (issueKey) => {
+              try {
+                const out = execSync("git ls-remote --heads origin", { encoding: "utf8" });
+                return out.includes(issueKey);
+              } catch (e) { return false; }
+            };
+            
+            const isWorking = hasBranch(existing.key);
+            const isDone = (statusName === "done" || statusKey === "done");
+            const isInProgress = (statusName.includes("in progress") || statusName.includes("đang") || statusName.includes("tiến hành"));
+            
+            // We want it to be In Progress if it has a branch, To Do if it doesn't.
+            const needsTransition = isDone || (isWorking && !isInProgress) || (!isWorking && isInProgress);
+
+            if (needsTransition) {
               const attemptTransition = (issueKey, targetList) => {
                 const res = curlJson("GET", `${jiraBase}/rest/api/3/issue/${issueKey}/transitions`);
                 const trans = res.transitions || [];
@@ -393,23 +407,12 @@ jobs:
                 return null;
               };
 
-              const hasBranch = (issueKey) => {
-                try {
-                  const out = execSync("git ls-remote --heads origin", { encoding: "utf8" });
-                  return out.includes(issueKey);
-                } catch (e) { return false; }
-              };
-              
-              const isWorking = hasBranch(existing.key);
-
               let firstTries = isWorking 
                 ? ["in progress", "start", "đang", "tiến hành", "reopen", "open", "to do", "backlog"]
-                : ["to do", "backlog", "open", "in progress"];
+                : ["to do", "backlog", "open"]; // Do not fallback to in progress if not working!
               
-              if (statusName === "done" || statusKey === "done") {
-                const firstTrans = attemptTransition(existing.key, firstTries) || attemptTransition(existing.key, [""]); // fallback to any
-                if (firstTrans) console.log(`🔄 Moved ${existing.key} to (Transition: ${firstTrans.name})`);
-              }
+              const firstTrans = attemptTransition(existing.key, firstTries) || attemptTransition(existing.key, [""]); // fallback to any
+              if (firstTrans) console.log(`🔄 Moved ${existing.key} to (Transition: ${firstTrans.name})`);
 
               // Double check if we need a second hop to In Progress
               if (isWorking) {
