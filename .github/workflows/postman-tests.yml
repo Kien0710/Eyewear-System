@@ -379,9 +379,19 @@ jobs:
             
             if (statusName === "done" || statusKey === "done") {
               const transRes = curlJson("GET", `${jiraBase}/rest/api/3/issue/${existing.key}/transitions`);
-              const reopen = (transRes.transitions || []).find(t => 
-                ["to do", "reopen", "in progress", "open", "backlog"].includes(normalize(t.name).toLowerCase())
-              ) || (transRes.transitions || [])[0]; // fallback to first available if specific ones not found
+              const transitions = transRes.transitions || [];
+              
+              // Nếu task đã có Assignee (có người làm/có nhánh), ưu tiên In Progress. Ngược lại ưu tiên To Do.
+              const targetNames = existing?.fields?.assignee 
+                ? ["in progress", "reopen", "open", "to do", "backlog"]
+                : ["to do", "backlog", "open", "in progress"];
+                
+              let reopen = null;
+              for (const name of targetNames) {
+                reopen = transitions.find(t => normalize(t.name).toLowerCase() === name);
+                if (reopen) break;
+              }
+              if (!reopen) reopen = transitions[0]; // fallback
               
               if (reopen) {
                 curlJson("POST", `${jiraBase}/rest/api/3/issue/${existing.key}/transitions`, { transition: { id: reopen.id } });
