@@ -67,12 +67,19 @@ class PaymentController extends BaseController
     {
         $orderId = $this->query('order_id');
 
-        if (!$orderId) {
-            return ApiResponse::validationError('order_id query parameter is required');
+        // ✅ Validate order_id is not empty
+        if (!$orderId || trim($orderId) === '') {
+            return ApiResponse::validationError('order_id query parameter is required and cannot be empty');
+        }
+
+        // ✅ Validate order_id is a valid positive integer
+        $orderIdInt = (int) $orderId;
+        if ($orderIdInt <= 0) {
+            return ApiResponse::validationError('order_id must be a valid positive integer');
         }
 
         try {
-            $payment = $this->paymentService->getPaymentByOrderId((int) $orderId);
+            $payment = $this->paymentService->getPaymentByOrderId($orderIdInt);
 
             if (!$payment) {
                 return ApiResponse::notFound('No payment found for this order');
