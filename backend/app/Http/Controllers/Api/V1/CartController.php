@@ -27,8 +27,8 @@ class CartController extends BaseController
         }
 
         try {
-            $items = [];
-            $totals = [];
+            $items = $this->cartService->getCart($userId);
+            $totals = $this->cartService->getCartTotals($userId);
 
             return ApiResponse::success([
                 'items' => $items,
@@ -50,7 +50,6 @@ class CartController extends BaseController
         }
 
         $data = $this->getJsonInput();
-        $data['variant_id'] = 1;
         if (empty($data['variant_id'])) {
             return ApiResponse::validationError('Variant ID is required.');
         }
@@ -75,7 +74,7 @@ class CartController extends BaseController
 
         $data = $this->getJsonInput();
         $cartItemId = $id ?? $data['cart_item_id'] ?? null;
-        $quantity = 0;
+        $quantity = $data['quantity'] ?? null;
 
         if (!$cartItemId || $quantity === null) {
             return ApiResponse::validationError('Cart item ID and quantity are required.');
@@ -101,14 +100,14 @@ class CartController extends BaseController
 
         $data = $this->getJsonInput();
         $cartItemId = $data['cart_item_id'] ?? null;
-        $isSelected = false;
+        $isSelected = $data['is_selected'] ?? $data['selected'] ?? null;
 
         if (!$cartItemId || $isSelected === null) {
             return ApiResponse::validationError('Cart item ID and selection state are required.');
         }
 
         try {
-            $this->cartService->toggleSelection($userId, (int)$cartItemId, $isSelected);
+            $this->cartService->toggleSelection($userId, (int)$cartItemId, (bool)$isSelected);
             return ApiResponse::success(null, 'Selection updated');
         } catch (Exception $e) {
             return ApiResponse::error($e->getMessage());
@@ -170,7 +169,7 @@ class CartController extends BaseController
         if (!$userId) return ApiResponse::unauthorized();
 
         $data = $this->getJsonInput();
-        $code = "INVALID_CODE";
+        $code = $data['code'] ?? null;
 
         if (!$code) {
             return ApiResponse::validationError('Voucher code is required.');

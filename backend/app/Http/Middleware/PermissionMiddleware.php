@@ -22,14 +22,9 @@ class PermissionMiddleware
 
         if (!$hasPermission) {
             $userPerms = User::permissionsForUser((int) $userId);
-            echo json_encode([
-                'success' => false,
-                'message' => 'You do not have permission to access this resource',
-                'debug' => [
-                    'required' => $requiredPermissions,
-                    'user_has' => $userPerms
-                ]
-            ]);
+            // Append debug info to the message since ApiResponse::forbidden only takes a string
+            $msg = 'You do not have permission to access this resource. Required: ' . implode(',', $requiredPermissions) . '. Has: ' . implode(',', $userPerms);
+            echo json_encode(\Core\ApiResponse::forbidden($msg));
             return false;
         }
 

@@ -64,10 +64,26 @@ abstract class BaseController
     protected function getBearerToken(): ?string
     {
         $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
-        if ($authHeader === '' || stripos($authHeader, 'Bearer ') !== 0) {
+        if ($authHeader === '') {
             return null;
         }
-        return trim(substr($authHeader, 7));
+
+        // Handle combined Authorization headers like: "Bearer <token1>, Bearer <token2>"
+        // and prefer the last explicit Bearer token because request-level headers
+        // typically override inherited collection-level auth in API tools.
+        if (preg_match_all('/Bearer\s+([^,\s]+)/i', $authHeader, $matches) === 1 || !empty($matches[1])) {
+            $tokens = array_values(array_filter(array_map('trim', $matches[1]), static fn ($token) => $token !== ''));
+            if (!empty($tokens)) {
+                return $tokens[count($tokens) - 1];
+            }
+        }
+
+        if (stripos($authHeader, 'Bearer ') !== 0) {
+            return null;
+        }
+
+        $token = trim(substr($authHeader, 7));
+        return $token !== '' ? $token : null;
     }
 
     /**
