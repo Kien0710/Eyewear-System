@@ -18,7 +18,6 @@ class WishlistController extends BaseController
 
     public function index()
     {
-        return \Core\ApiResponse::serverError('Wishlist caching layer failed');
         $userId = $this->getUserId();
         if (!$userId) {
             return ApiResponse::unauthorized();
