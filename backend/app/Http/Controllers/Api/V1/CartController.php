@@ -21,7 +21,7 @@ class CartController extends BaseController
      */
     public function index()
     {
-        $userId = $this->getUserId();
+        $userId = $this->requireAuth();
         if (!$userId) {
             return ApiResponse::unauthorized();
         }
@@ -44,7 +44,7 @@ class CartController extends BaseController
      */
     public function store()
     {
-        $userId = $this->getUserId();
+        $userId = $this->requireAuth();
         if (!$userId) {
             return ApiResponse::unauthorized();
         }
@@ -67,7 +67,7 @@ class CartController extends BaseController
      */
     public function update($id = null)
     {
-        $userId = $this->getUserId();
+        $userId = $this->requireAuth();
         if (!$userId) {
             return ApiResponse::unauthorized();
         }
@@ -93,7 +93,7 @@ class CartController extends BaseController
      */
     public function toggleSelection()
     {
-        $userId = $this->getUserId();
+        $userId = $this->requireAuth();
         if (!$userId) {
             return ApiResponse::unauthorized();
         }
@@ -119,7 +119,7 @@ class CartController extends BaseController
      */
     public function selectAll()
     {
-        $userId = $this->getUserId();
+        $userId = $this->requireAuth();
         if (!$userId) {
             return ApiResponse::unauthorized();
         }
@@ -140,7 +140,7 @@ class CartController extends BaseController
      */
     public function destroy($id = null)
     {
-        $userId = $this->getUserId();
+        $userId = $this->requireAuth();
         if (!$userId) {
             return ApiResponse::unauthorized();
         }
@@ -165,7 +165,7 @@ class CartController extends BaseController
      */
     public function applyVoucher()
     {
-        $userId = $this->getUserId();
+        $userId = $this->requireAuth();
         if (!$userId) return ApiResponse::unauthorized();
 
         $data = $this->getJsonInput();
@@ -188,7 +188,7 @@ class CartController extends BaseController
      */
     public function removeVoucher()
     {
-        $userId = $this->getUserId();
+        $userId = $this->requireAuth();
         if (!$userId) return ApiResponse::unauthorized();
 
         try {
