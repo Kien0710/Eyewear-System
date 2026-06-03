@@ -66,14 +66,14 @@ jobs:
 
     - name: Start PHP backend server
       run: |
-        php -S 127.0.0.1:8000 -t backend/public > /tmp/php-server.log 2>&1 &
+        php -S 127.0.0.1:8000 -t backend/public backend/public/index.php > /tmp/php-server.log 2>&1 &
         echo "⏳ Waiting for server to be ready..."
         MAX_RETRIES=15
         RETRY_COUNT=0
         SERVER_READY=false
         while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/api/v1/health 2>/dev/null || echo "000")
-          if [ "$HTTP_CODE" != "000" ]; then
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "204" ]; then
             echo "✅ Server is responding (HTTP $HTTP_CODE)."
             SERVER_READY=true
             break
@@ -202,8 +202,7 @@ jobs:
         // ── Parse Newman report ───────────────────────────────────────────
         const failedApis   = new Set();
         const passedApis   = new Set();
-        const failures     = [];
-        const uniqueErrors = new Set();
+        const failuresMap  = new Map();
 
         for (const item of reportFiles) {
           if (!fs.existsSync(item.file)) {
@@ -215,31 +214,51 @@ jobs:
           for (const fail of (data?.run?.failures || [])) {
             const apiName  = normalize(fail?.source?.name || "Unknown API");
             const errorMsg = normalize(fail?.error?.message || "Assertion failed");
-            const key      = `${item.name}|||${apiName}|||${errorMsg}`;
-            if (uniqueErrors.has(key)) continue;
-            uniqueErrors.add(key);
+            const key      = `${item.name}|||${apiName}`;
+            
             failedApis.add(apiName);
-            failures.push({
-              moduleName: item.name,
-              apiName,
-              errorMsg,
-              bugKey: slugify(`${item.name}-${apiName}`),
-              summary: `❌ [CI/CD] Lỗi API: ${apiName} (${item.name})`
-            });
+            
+            if (!failuresMap.has(key)) {
+              failuresMap.set(key, {
+                moduleName: item.name,
+                apiName,
+                errorMsgs: [errorMsg],
+                bugKey: slugify(`${item.name}-${apiName}`),
+                summary: `❌ [CI/CD] Lỗi API: ${apiName} (${item.name})`
+              });
+            } else {
+              failuresMap.get(key).errorMsgs.push(errorMsg);
+            }
           }
 
           for (const exec of (data?.run?.executions || [])) {
             const apiName = normalize(exec?.item?.name || "");
-            if (apiName && !failedApis.has(apiName)) passedApis.add(apiName);
+            if (apiName && !failedApis.has(apiName)) passedApis.add(`${item.name}|||${apiName}`);
+            
+            const key = `${item.name}|||${apiName}`;
+            if (apiName && failuresMap.has(key)) {
+              const failObj = failuresMap.get(key);
+              if (!failObj.details) {
+                let reqBody = exec?.request?.body?.raw ? "\\nPayload:\\n" + exec.request.body.raw.replace(/\\n/g, "\\n") : "";
+                if (reqBody.length > 500) reqBody = reqBody.substring(0, 500) + "... (truncated)";
+                failObj.details = `Method: ${exec?.request?.method || "UNKNOWN"}\\nURL: ${exec?.request?.url?.raw || "UNKNOWN URL"}${reqBody}\\nResponse Code: ${exec?.response?.code || "UNKNOWN"}`;
+              }
+            }
           }
         }
+        
+        const failures = Array.from(failuresMap.values()).map(f => {
+          // Remove duplicate error messages inside the array
+          f.errorMsg = [...new Set(f.errorMsgs)].join("\\n- ");
+          return f;
+        });
 
         const runUrl = `https://github.com/${process.env.REPOSITORY}/actions/runs/${process.env.RUN_ID}`;
 
         // ── Load open CI/CD bugs from Jira (for auto-close logic) ──────────
         function getOpenCiBugs() {
           const jql = `project = ${process.env.PROJECT_KEY} AND statusCategory != Done`;
-          const url = `${jiraBase}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&maxResults=1000&fields=summary,status,labels,issuetype`;
+          const url = `${jiraBase}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&maxResults=1000&fields=summary,status,labels,issuetype,assignee`;
           const res = curlJson("GET", url);
           if (res.errorMessages || res.errors) {
             console.log("❌ Jira search error:", JSON.stringify(res).slice(0, 500));
@@ -259,7 +278,7 @@ jobs:
         // ── Load ALL CI/CD bugs from Jira (for deduplication — includes Done) ──
         function getAllCiBugs() {
           const jql = `project = ${process.env.PROJECT_KEY} AND issuetype = Bug AND labels = "ci-cd" ORDER BY created DESC`;
-          const url = `${jiraBase}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&maxResults=1000&fields=summary,status,labels,issuetype`;
+          const url = `${jiraBase}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&maxResults=1000&fields=summary,status,labels,issuetype,assignee`;
           const res = curlJson("GET", url);
           if (res.errorMessages || res.errors) {
             console.log("⚠️ Jira all-bugs search error:", JSON.stringify(res).slice(0, 300));
@@ -323,9 +342,10 @@ jobs:
           const labels  = issue?.fields?.labels || [];
           let matched   = false;
 
-          for (const apiName of passedApis) {
-            const bk = slugify(`Eyewear API-${apiName}`);
-            if (labels.includes(`api-${bk}`) || (summary.includes("[CI/CD]") && summary.includes(apiName))) {
+          for (const passedKey of passedApis) {
+            const [modName, apiName] = passedKey.split("|||");
+            const bk = slugify(`${modName}-${apiName}`);
+            if (labels.includes(`api-${bk}`) || (summary.includes("[CI/CD]") && summary.includes(apiName) && summary.includes(modName))) {
               matched = true;
               break;
             }
@@ -354,8 +374,74 @@ jobs:
           const existing = findExistingBug(bug);
 
           if (existing) {
+            // Reopen if bug was already marked as Done
+            const statusName = (existing?.fields?.status?.statusCategory?.name || "").toLowerCase();
+            const statusKey = (existing?.fields?.status?.statusCategory?.key || "").toLowerCase();
+            
+            const hasBranch = (issueKey) => {
+              try {
+                const out = execSync("git ls-remote --heads origin", { encoding: "utf8" });
+                return out.includes(issueKey);
+              } catch (e) { return false; }
+            };
+            
+            const isWorking = hasBranch(existing.key);
+            const isDone = (statusName === "done" || statusKey === "done");
+            const isInProgress = (statusName.includes("in progress") || statusName.includes("đang") || statusName.includes("tiến hành"));
+            
+            // We want it to be In Progress if it has a branch, To Do if it doesn't.
+            const needsTransition = isDone || (isWorking && !isInProgress) || (!isWorking && isInProgress);
+
+            if (needsTransition) {
+              const attemptTransition = (issueKey, targetList) => {
+                const res = curlJson("GET", `${jiraBase}/rest/api/3/issue/${issueKey}/transitions`);
+                const trans = res.transitions || [];
+                let found = null;
+                for (const name of targetList) {
+                  found = trans.find(t => normalize(t.name).toLowerCase().includes(name));
+                  if (found) break;
+                }
+                if (found) {
+                  curlJson("POST", `${jiraBase}/rest/api/3/issue/${issueKey}/transitions`, { transition: { id: found.id } });
+                  return found;
+                }
+                return null;
+              };
+
+              let firstTries = isWorking 
+                ? ["in progress", "start", "đang", "tiến hành", "reopen", "open", "to do", "backlog"]
+                : ["to do", "backlog", "open"]; // Do not fallback to in progress if not working!
+              
+              const firstTrans = attemptTransition(existing.key, firstTries) || attemptTransition(existing.key, [""]); // fallback to any
+              if (firstTrans) console.log(`🔄 Moved ${existing.key} to (Transition: ${firstTrans.name})`);
+
+              // Double check if we need a second hop to In Progress
+              if (isWorking) {
+                 const hopTrans = attemptTransition(existing.key, ["in progress", "start", "đang", "tiến hành"]);
+                 if (hopTrans) console.log(`🚀 Double-hopped ${existing.key} to (Transition: ${hopTrans.name})`);
+              }
+            }
+
+            // UPDATE BUG DESCRIPTION to reflect current error
+            curlJson("PUT", `${jiraBase}/rest/api/3/issue/${existing.key}`, {
+              fields: {
+                description: adf([
+                  "Hệ thống kiểm thử tự động phát hiện API bị lỗi (Bug tái diễn).",
+                  `Bộ kịch bản: ${bug.moduleName}`,
+                  `Tên API: ${bug.apiName}`,
+                  `Thông tin Request/Response:\\n${bug.details || "Không có"}`,
+                  `Chi tiết các lỗi hiện tại:\\n- ${bug.errorMsg}`,
+                  "---",
+                  `Người kích hoạt build: ${process.env.ACTOR}`,
+                  `Nhánh code: ${process.env.BRANCH}`,
+                  `GitHub Actions Run #${process.env.RUN_NUMBER}: ${runUrl}`,
+                  "Báo cáo HTML: tải trong mục Artifacts trên GitHub Actions."
+                ])
+              }
+            });
+
             const action = upsertComment(existing.key, [
-              "⚠️ CI/CD vẫn phát hiện lỗi này trong lần chạy mới.",
+              "⚠️ CI/CD vẫn phát hiện lỗi này trong lần chạy mới (Bug tái diễn - Reopened).",
               `API: ${bug.apiName}`,
               `Bộ test: ${bug.moduleName}`,
               `Lỗi: ${bug.errorMsg}`,
@@ -374,7 +460,8 @@ jobs:
                   "Hệ thống kiểm thử tự động phát hiện API bị lỗi.",
                   `Bộ kịch bản: ${bug.moduleName}`,
                   `Tên API: ${bug.apiName}`,
-                  `Chi tiết lỗi: ${bug.errorMsg}`,
+                  `Thông tin Request/Response:\\n${bug.details || "Không có"}`,
+                  `Chi tiết các lỗi:\\n- ${bug.errorMsg}`,
                   "---",
                   `Người kích hoạt build: ${process.env.ACTOR}`,
                   `Nhánh code: ${process.env.BRANCH}`,

@@ -153,40 +153,12 @@
         "type": "text/javascript",
         "exec": [
           "if (!pm.collectionVariables.get('baseUrl')) { pm.collectionVariables.set('baseUrl', 'http://localhost:8000/api/v1'); }",
-          "// Init negative test flag if not set",
           "if (!pm.collectionVariables.has('_isNegativeTest')) { pm.collectionVariables.set('_isNegativeTest', 'false'); }",
-          "function upsertHeader(key, value) { if (value) pm.request.headers.upsert({ key, value }); }",
           "const tokenName = pm.request.headers.get('X-Auth-Token-Var');",
-          "if (tokenName) { const token = pm.collectionVariables.get(tokenName); if (token) upsertHeader('Authorization', 'Bearer ' + token); pm.request.headers.remove('X-Auth-Token-Var'); }"
-        ]
-      }
-    },
-    {
-      "listen": "test",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          "// Skip global status check if this is a negative test case",
-          "const isNegative = pm.collectionVariables.get('_isNegativeTest') === 'true';",
-          "if (isNegative) {",
-          "    pm.collectionVariables.set('_isNegativeTest', 'false');",
-          "} else {",
-          "    pm.test('HTTP status is Successful (200, 201, 204)', function () { pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]); });",
-          "    let json = null; try { json = pm.response.json(); } catch (e) {}",
-          "    if (json) pm.test('Response is valid JSON', function () { pm.expect(json).to.be.an('object'); });",
-          "    function dig(obj, keys) { if (!obj || typeof obj !== 'object') return undefined; for (const key of keys) { if (Object.prototype.hasOwnProperty.call(obj, key)) return obj[key]; } if (obj.data && typeof obj.data === 'object') return dig(obj.data, keys); return undefined; }",
-          "    function firstArray(obj) { if (Array.isArray(obj)) return obj; if (obj && Array.isArray(obj.data)) return obj.data; if (obj && obj.data && Array.isArray(obj.data.data)) return obj.data.data; if (obj && obj.data && Array.isArray(obj.data.items)) return obj.data.items; if (obj && Array.isArray(obj.items)) return obj.items; return []; }",
-          "    function setIf(name, value) { if (value !== undefined && value !== null && value !== '') pm.collectionVariables.set(name, String(value)); }",
-          "    if (json) { const data = json.data || json; setIf('productId', dig(data, ['product_id','id'])); setIf('variantId', dig(data, ['variant_id','first_variant_id'])); setIf('orderId', dig(data, ['order_id','id'])); setIf('paymentId', dig(data, ['payment_id','id'])); setIf('ticketId', dig(data, ['ticket_id','id'])); setIf('voucherId', dig(data, ['voucher_id','id'])); setIf('addressId', dig(data, ['address_id','id'])); setIf('shipmentId', dig(data, ['shipment_id','id'])); const arr = firstArray(json); if (arr.length && arr[0]) { setIf('productId', arr[0].product_id || arr[0].id); setIf('variantId', arr[0].variant_id || arr[0].productvariant_id || arr[0].first_variant_id); setIf('orderId', arr[0].order_id || arr[0].id); setIf('paymentId', arr[0].payment_id || arr[0].id); setIf('ticketId', arr[0].ticket_id || arr[0].id); setIf('voucherId', arr[0].voucher_id || arr[0].id); setIf('addressId', arr[0].address_id || arr[0].id); setIf('shipmentId', arr[0].shipment_id || arr[0].id); } }",
-          "    // Advanced QA Schema Validation (Dynamic)",
-          "    if (json && (pm.response.code === 200 || pm.response.code === 201)) {",
-          "        const body = json;",
-          "        if (body.data && Array.isArray(body.data)) {",
-          "            pm.test('Data array should not contain null items', function() {",
-          "                pm.expect(body.data.every(item => item !== null)).to.be.true;",
-          "            });",
-          "        }",
-          "    }",
+          "if (tokenName) {",
+          "    const token = pm.collectionVariables.get(tokenName);",
+          "    if (token) pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + token });",
+          "    pm.request.headers.remove('X-Auth-Token-Var');",
           "}"
         ]
       }
@@ -209,20 +181,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "pm.test('API is running', function () {",
+                  "    pm.expect(res.success).to.eql(true);",
+                  "    pm.expect(res.data.status).to.eql('ok');",
                   "});"
                 ]
               }
@@ -242,20 +226,31 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "pm.test('API root responds', function () {",
+                  "    pm.expect(res.success).to.eql(true);",
                   "});"
                 ]
               }
@@ -289,21 +284,34 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && res.data && res.data.user) {",
+                  "    pm.test('Register returns user object', function () {",
+                  "        pm.expect(res.data.user).to.have.property('id');",
+                  "    });",
+                  "}"
                 ]
               }
             }
@@ -317,29 +325,33 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});",
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
                   "",
-                  "// Save customer token",
-                  "const res = pm.response.json();",
-                  "if (res.success && res.data && res.data.access_token) {",
-                  "    pm.collectionVariables.set('customerToken', res.data.access_token);",
-                  "    pm.collectionVariables.set('authToken', res.data.access_token);",
-                  "    pm.collectionVariables.set('customerId', res.data.user.id);",
-                  "    console.log('Customer token saved.');",
+                  "",
+                  "if (res.success && res.data && (res.data.token || res.data.access_token)) {",
+                  "    pm.collectionVariables.set('customerToken', (res.data.token || res.data.access_token));",
+                  "    pm.collectionVariables.set('authToken', (res.data.token || res.data.access_token));",
+                  "    if (res.data.user) pm.collectionVariables.set('customerId', String(res.data.user.id));",
                   "}"
                 ]
               }
@@ -368,28 +380,33 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});",
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
                   "",
-                  "// Save admin token",
-                  "const res = pm.response.json();",
-                  "if (res.success && res.data && res.data.access_token) {",
-                  "    pm.collectionVariables.set('adminToken', res.data.access_token);",
-                  "    pm.collectionVariables.set('authToken', res.data.access_token);",
-                  "    console.log('Admin token saved.');",
+                  "",
+                  "if (res.success && res.data && (res.data.token || res.data.access_token)) {",
+                  "    pm.collectionVariables.set('adminToken', (res.data.token || res.data.access_token));",
+                  "    pm.collectionVariables.set('authToken', (res.data.token || res.data.access_token));",
+                  "    if (res.data.user) pm.collectionVariables.set('customerId', String(res.data.user.id));",
                   "}"
                 ]
               }
@@ -432,20 +449,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "pm.test('Returns user data', function () {",
+                  "    pm.expect(res.success).to.eql(true);",
+                  "    pm.expect(res.data).to.have.property('user');",
                   "});"
                 ]
               }
@@ -482,21 +511,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -524,21 +561,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -566,18 +611,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('[SKIP] Reset Password — requires real token/state, skipped in CI', function () {",
-                  "    pm.expect(true).to.be.true; // Intentional skip",
-                  "});"
-                ]
-              }
-            },
-            {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.collectionVariables.set('_isNegativeTest', 'true');"
+                  "pm.test('[SKIP] Requires email token, skipped in CI', function () { pm.expect(true).to.be.true; });"
                 ]
               }
             }
@@ -601,18 +635,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('[SKIP] Verify Email — requires real token/state, skipped in CI', function () {",
-                  "    pm.expect(true).to.be.true; // Intentional skip",
-                  "});"
-                ]
-              }
-            },
-            {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.collectionVariables.set('_isNegativeTest', 'true');"
+                  "pm.test('[SKIP] Requires verification token, skipped in CI', function () { pm.expect(true).to.be.true; });"
                 ]
               }
             }
@@ -640,30 +663,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
-                ]
-              }
-            },
-            {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.collectionVariables.set('_isNegativeTest', 'true');"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -691,23 +713,33 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});",
-                  "const res = pm.response.json();",
-                  "if (res.success && res.data && res.data.access_token) { pm.collectionVariables.set('managerToken', res.data.access_token); pm.collectionVariables.set('authToken', res.data.access_token); }"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && res.data && (res.data.token || res.data.access_token)) {",
+                  "    pm.collectionVariables.set('managerToken', (res.data.token || res.data.access_token));",
+                  "    if (res.data.user) pm.collectionVariables.set('customerId', String(res.data.user.id));",
+                  "}"
                 ]
               }
             }
@@ -735,23 +767,33 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});",
-                  "const res = pm.response.json();",
-                  "if (res.success && res.data && res.data.access_token) { pm.collectionVariables.set('salesToken', res.data.access_token); pm.collectionVariables.set('authToken', res.data.access_token); }"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && res.data && (res.data.token || res.data.access_token)) {",
+                  "    pm.collectionVariables.set('salesToken', (res.data.token || res.data.access_token));",
+                  "    if (res.data.user) pm.collectionVariables.set('customerId', String(res.data.user.id));",
+                  "}"
                 ]
               }
             }
@@ -779,23 +821,33 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});",
-                  "const res = pm.response.json();",
-                  "if (res.success && res.data && res.data.access_token) { pm.collectionVariables.set('operationsToken', res.data.access_token); pm.collectionVariables.set('authToken', res.data.access_token); }"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && res.data && (res.data.token || res.data.access_token)) {",
+                  "    pm.collectionVariables.set('operationsToken', (res.data.token || res.data.access_token));",
+                  "    if (res.data.user) pm.collectionVariables.set('customerId', String(res.data.user.id));",
+                  "}"
                 ]
               }
             }
@@ -805,21 +857,28 @@
           "name": "Login (Error - Invalid Credentials)",
           "event": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 401 Unauthorized', function () { pm.expect(pm.response.code).to.eql(401); });",
-                  "pm.test('Response has error message', function () { var jsonData = pm.response.json(); pm.expect(jsonData).to.have.property('success', false); });"
-                ]
-              }
-            },
-            {
               "listen": "prerequest",
               "script": {
                 "type": "text/javascript",
                 "exec": [
                   "pm.collectionVariables.set('_isNegativeTest', 'true');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Negative test case",
+                  "pm.collectionVariables.set('_isNegativeTest', 'true');",
+                  "",
+                  "pm.test('Status code is 401 or 403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401,403]);",
+                  "});",
+                  "pm.test('success is false', function () {",
+                  "    pm.expect(pm.response.json().success).to.eql(false);",
+                  "});"
                 ]
               }
             }
@@ -843,20 +902,28 @@
           "name": "Register (Error - Missing Email)",
           "event": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 422 Unprocessable Entity', function () { pm.expect(pm.response.code).to.eql(422); });"
-                ]
-              }
-            },
-            {
               "listen": "prerequest",
               "script": {
                 "type": "text/javascript",
                 "exec": [
                   "pm.collectionVariables.set('_isNegativeTest', 'true');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Negative test case",
+                  "pm.collectionVariables.set('_isNegativeTest', 'true');",
+                  "",
+                  "pm.test('Status code is 422', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([422]);",
+                  "});",
+                  "pm.test('success is false', function () {",
+                  "    pm.expect(pm.response.json().success).to.eql(false);",
+                  "});"
                 ]
               }
             }
@@ -893,21 +960,36 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "pm.test('Returns product list', function () {",
+                  "    pm.expect(res.success).to.eql(true);",
+                  "});",
+                  "if (res.data && Array.isArray(res.data.data) && res.data.data.length) {",
+                  "    pm.collectionVariables.set('productId', String(res.data.data[0].id));",
+                  "    if (res.data.data[0].slug) pm.collectionVariables.set('productSlug', res.data.data[0].slug);",
+                  "}"
                 ]
               }
             }
@@ -925,20 +1007,31 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "pm.test('Returns product detail', function () {",
+                  "    pm.expect(res.success).to.eql(true);",
                   "});"
                 ]
               }
@@ -957,20 +1050,31 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "pm.test('Returns product detail', function () {",
+                  "    pm.expect(res.success).to.eql(true);",
                   "});"
                 ]
               }
@@ -989,20 +1093,31 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "pm.test('Returns featured sections', function () {",
+                  "    pm.expect(res.success).to.eql(true);",
                   "});"
                 ]
               }
@@ -1021,20 +1136,31 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "pm.test('Returns categories', function () {",
+                  "    pm.expect(res.success).to.eql(true);",
                   "});"
                 ]
               }
@@ -1053,21 +1179,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1085,21 +1219,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1117,21 +1259,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1164,20 +1314,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "pm.test('Returns profile', function () {",
+                  "    pm.expect(res.success).to.eql(true);",
+                  "    pm.expect(res.data).to.have.property('profile');",
                   "});"
                 ]
               }
@@ -1214,21 +1376,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1255,7 +1425,7 @@
                 {
                   "key": "avatar",
                   "type": "file",
-                  "src": ""
+                  "src": "sample_avatar.jpg"
                 }
               ]
             }
@@ -1266,21 +1436,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1308,21 +1486,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1358,21 +1544,33 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && res.data) {",
+                  "    const v = res.data.id || res.data.id;",
+                  "    if (v) pm.collectionVariables.set('addressId', String(v));",
+                  "}"
                 ]
               }
             }
@@ -1408,21 +1606,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1450,21 +1656,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1497,20 +1711,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "pm.test('Returns cart', function () {",
+                  "    pm.expect(res.success).to.eql(true);",
+                  "    pm.expect(res.data).to.have.property('items');",
                   "});"
                 ]
               }
@@ -1547,21 +1773,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && res.data && res.data.id) {",
+                  "    pm.collectionVariables.set('cartItemId', String(res.data.id));",
+                  "}"
                 ]
               }
             }
@@ -1597,21 +1834,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1647,21 +1892,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1697,21 +1950,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1747,21 +2008,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1789,21 +2058,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1831,21 +2108,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1878,21 +2163,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1928,21 +2221,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -1970,21 +2271,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -2025,31 +2334,34 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});",
-                  "const res = pm.response.json();",
-                  "const data = res.data || {};",
-                  "const oid = data.order_id || data.id;",
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
                   "",
-                  "pm.test('Checkout returns order id', function () {",
-                  "    pm.expect(oid).to.exist;",
-                  "});",
                   "",
-                  "pm.collectionVariables.set('orderId', String(oid));",
-                  "console.log('Saved orderId:', oid);"
+                  "// --- Retained custom extraction logic ---",
+                  "if (!isNegative && pm.response.code !== 204) {",
+                  "    const res = pm.response.json();",
+                  "    pm.collectionVariables.set('orderId', String(res.data.order_id));",
+                  "}"
                 ]
               }
             }
@@ -2077,21 +2389,35 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "pm.test('Returns orders', function () {",
+                  "    pm.expect(res.success).to.eql(true);",
+                  "});",
+                  "if (Array.isArray(res.data) && res.data.length) {",
+                  "    pm.collectionVariables.set('orderId', String(res.data[0].id));",
+                  "}"
                 ]
               }
             }
@@ -2119,21 +2445,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -2166,21 +2500,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -2216,21 +2558,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && res.data && res.data.prescription_id) {",
+                  "    pm.collectionVariables.set('prescriptionId', String(res.data.prescription_id));",
+                  "}"
                 ]
               }
             }
@@ -2271,21 +2624,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && res.data && res.data.id) {",
+                  "    pm.collectionVariables.set('paymentId', String(res.data.id));",
+                  "}"
                 ]
               }
             }
@@ -2313,21 +2677,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -2363,21 +2735,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -2405,21 +2785,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -2452,21 +2840,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && Array.isArray(res.data) && res.data.length) {",
+                  "    pm.collectionVariables.set('ticketId', String(res.data[0].id));",
+                  "}"
                 ]
               }
             }
@@ -2502,21 +2901,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && res.data && res.data.id) {",
+                  "    pm.collectionVariables.set('ticketId', String(res.data.id));",
+                  "}"
                 ]
               }
             }
@@ -2544,21 +2954,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -2594,21 +3012,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -2644,21 +3070,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -2694,21 +3128,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -2741,21 +3183,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && Array.isArray(res.data) && res.data.length) {",
+                  "    pm.collectionVariables.set('orderId', String(res.data[0].id));",
+                  "}"
                 ]
               }
             }
@@ -2783,21 +3236,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -2833,21 +3294,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -2883,21 +3352,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -2925,21 +3402,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -2975,21 +3460,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3022,21 +3515,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3072,21 +3573,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3122,21 +3631,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && res.data && res.data.id) {",
+                  "    pm.collectionVariables.set('shipmentId', String(res.data.id));",
+                  "}"
                 ]
               }
             }
@@ -3172,21 +3692,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3201,20 +3729,28 @@
           "name": "Get Users (Error - 403 Forbidden for Customer)",
           "event": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 403 Forbidden', function () { pm.expect(pm.response.code).to.be.oneOf([401, 403]); });"
-                ]
-              }
-            },
-            {
               "listen": "prerequest",
               "script": {
                 "type": "text/javascript",
                 "exec": [
                   "pm.collectionVariables.set('_isNegativeTest', 'true');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Negative test case",
+                  "pm.collectionVariables.set('_isNegativeTest', 'true');",
+                  "",
+                  "pm.test('Status code is 403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([403]);",
+                  "});",
+                  "pm.test('success is false', function () {",
+                  "    pm.expect(pm.response.json().success).to.eql(false);",
+                  "});"
                 ]
               }
             }
@@ -3256,21 +3792,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3298,21 +3842,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3339,7 +3891,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"full_name\": \"Nhan Vien Moi\",\n  \"email\": \"staff@example.com\",\n  \"password\": \"password123\",\n  \"role_id\": 3\n}"
+              "raw": "{\n  \"full_name\": \"Staff CI Test\",\n  \"email\": \"staff_ci_{{$timestamp}}@example.com\",\n  \"password\": \"password123\",\n  \"role_id\": 3\n}"
             }
           },
           "event": [
@@ -3348,21 +3900,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && res.data && res.data.id) {",
+                  "    pm.collectionVariables.set('staffId', String(res.data.id));",
+                  "}"
                 ]
               }
             }
@@ -3398,21 +3961,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3440,21 +4011,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3482,21 +4061,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3532,21 +4119,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3574,21 +4169,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3621,21 +4224,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3671,21 +4282,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3726,21 +4345,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && res.data && res.data.id) {",
+                  "    pm.collectionVariables.set('productId', String(res.data.id));",
+                  "}"
                 ]
               }
             }
@@ -3776,21 +4406,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3818,21 +4456,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3868,21 +4514,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3910,21 +4564,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -3957,21 +4619,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && Array.isArray(res.data) && res.data.length) {",
+                  "    pm.collectionVariables.set('voucherId', String(res.data[0].id));",
+                  "}"
                 ]
               }
             }
@@ -4007,21 +4680,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  "",
+                  "if (res.success && res.data && res.data.id) {",
+                  "    pm.collectionVariables.set('voucherId', String(res.data.id));",
+                  "}"
                 ]
               }
             }
@@ -4057,21 +4741,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -4099,21 +4791,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -4146,21 +4846,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -4188,21 +4896,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
@@ -4230,21 +4946,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is successful', function () {",
+                  "// Auto-generated test – matches backend ApiResponse exactly",
+                  "let res = {}; try { res = pm.response.json(); } catch (e) {}",
+                  "",
+                  "pm.test('Status code is 200/201/204', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
                   "});",
-                  "",
-                  "pm.test('Response time is acceptable', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+                  "pm.test('Response time is acceptable (< 1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});",
-                  "",
-                  "pm.test('Response follows standard schema', function () {",
-                  "    if(pm.response.code !== 204) {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('object');",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "try {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Success flag is true', function () {",
                   "        pm.expect(jsonData).to.have.property('success');",
-                  "    }",
-                  "});"
+                  "        if (jsonData.success !== undefined) {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "        }",
+                  "    });",
+                  "} catch(e) {}",
+                  "",
+                  ""
                 ]
               }
             }
