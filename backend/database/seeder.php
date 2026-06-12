@@ -156,7 +156,8 @@ try {
             'update_tracking',
             'process_preorder_inventory',
             'process_prescription_orders',
-            'update_order_status'
+            'update_order_status',
+            'confirm_order',
         ],
         'MANAGER' => [
             'manage_products',
@@ -164,7 +165,8 @@ try {
             'manage_promotions',
             'manage_users',
             'view_reports',
-            'manage_policies'
+            'manage_policies',
+            'confirm_order',
         ],
         'ADMIN' => [
             'manage_roles',
