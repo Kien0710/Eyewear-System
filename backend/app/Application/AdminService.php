@@ -115,7 +115,7 @@ class AdminService
             SELECT u.id, u.full_name, u.email, u.phone, u.status, u.created_at, r.name AS role_name, r.id AS role_id
             FROM user u
             JOIN user_roles ur ON u.id = ur.user_id
-            JOIN roles r ON ur.role_id = r.id
+            JOIN role r ON ur.role_id = r.id
             WHERE u.id = ?
         ");
         $stmt->execute([$userId]);
