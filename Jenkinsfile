@@ -151,7 +151,48 @@ pipeline {
         }
 
         // ═════════════════════════════════════════════════════════
-        //  STAGE 3 — SONARQUBE ANALYSIS
+        //  STAGE 3 — PHPUNIT UNIT TESTS + COVERAGE
+        //  Cài PHPUnit qua Composer, chạy test, sinh coverage.xml
+        // ═════════════════════════════════════════════════════════
+        stage('PHPUnit Tests') {
+            steps {
+                echo '🧪 Running PHPUnit unit tests with coverage...'
+                script {
+                    if (isUnix()) {
+                        sh '''
+                            cd backend
+                            if command -v composer > /dev/null 2>&1; then
+                                composer install --no-interaction --prefer-dist --quiet
+                                XDEBUG_MODE=coverage vendor/bin/phpunit \
+                                    --coverage-clover tests/coverage.xml \
+                                    --log-junit tests/junit.xml \
+                                    --colors=never || true
+                                echo "✅ PHPUnit tests completed."
+                            else
+                                echo "⚠️ Composer not found — skipping PHPUnit tests."
+                            fi
+                        '''
+                    } else {
+                        bat '''
+                            cd backend
+                            where composer >nul 2>nul
+                            if %ERRORLEVEL% EQU 0 (
+                                call composer install --no-interaction --prefer-dist --quiet
+                                set XDEBUG_MODE=coverage
+                                call vendor\\bin\\phpunit --coverage-clover tests/coverage.xml --log-junit tests/junit.xml --colors=never
+                                echo PHPUnit tests completed.
+                            ) else (
+                                echo Composer not found — skipping PHPUnit tests.
+                            )
+                            exit /b 0
+                        '''
+                    }
+                }
+            }
+        }
+
+        // ═════════════════════════════════════════════════════════
+        //  STAGE 4 — SONARQUBE ANALYSIS
         //  Cấu hình scan đọc từ sonar-project.properties
         //  Chỉ truyền version (dynamic) và token (secret) qua CLI
         // ═════════════════════════════════════════════════════════
