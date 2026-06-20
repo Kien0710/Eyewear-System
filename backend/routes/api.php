@@ -193,7 +193,7 @@ Router::group(['prefix' => 'api/v1'], function () {
             });
         });
 
-        Router::group(['prefix' => 'dashboard', 'middleware' => 'permission:view_reports'], function () {
+        Router::group(['prefix' => 'dashboard', 'middleware' => 'role:ADMIN|MANAGER'], function () {
             Router::get('/', [DashboardController::class, 'index']);
             Router::get('operations', [DashboardController::class, 'operations']);
             Router::get('sales-report', [DashboardController::class, 'salesReport']);
