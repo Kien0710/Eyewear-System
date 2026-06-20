@@ -165,7 +165,7 @@ Router::group(['prefix' => 'api/v1'], function () {
                 Router::put('stock', [InventoryController::class, 'updateStock'])->middleware('permission:manage_products|process_preorder_inventory');
             });
 
-            Router::group(['prefix' => 'products', 'middleware' => 'permission:manage_products'], function () {
+            Router::group(['prefix' => 'products', 'middleware' => 'role:ADMIN|MANAGER'], function () {
                 Router::post('/', [ProductController::class, 'store']);
                 Router::put('/', [ProductController::class, 'update']);
                 Router::put('{id}', [ProductController::class, 'update']);
