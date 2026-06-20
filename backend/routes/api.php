@@ -161,7 +161,7 @@ Router::group(['prefix' => 'api/v1'], function () {
         Router::group(['prefix' => 'admin'], function () {
             
             Router::group(['prefix' => 'inventory'], function () {
-                Router::get('/', [InventoryController::class, 'index'])->middleware('permission:manage_products|process_preorder_inventory');
+                Router::get('/', [InventoryController::class, 'index'])->middleware('role:ADMIN|MANAGER|SALES_STAFF|OPERATIONS_STAFF');
                 Router::put('stock', [InventoryController::class, 'updateStock'])->middleware('permission:manage_products|process_preorder_inventory');
             });
 
