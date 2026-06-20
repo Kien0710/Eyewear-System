@@ -90,7 +90,7 @@ Router::group(['prefix' => 'api/v1'], function () {
             Router::post('select-all', [CartController::class, 'selectAll']);
         });
 
-        // Wishlist
+        // Wishlist (Accessible to all authenticated users - ESQ-861)
         Router::group(['prefix' => 'wishlist'], function () {
             Router::get('/', [WishlistController::class, 'index']);
             Router::post('toggle', [WishlistController::class, 'toggle']);
