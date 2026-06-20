@@ -29,6 +29,7 @@ pipeline {
         SONAR_PROJECT_KEY  = 'eyewear-system'
         SONAR_PROJECT_NAME = 'Eyewear System'
         JAVA_HOME          = 'C:\\Program Files\\Java\\jdk-21.0.10'
+        PATH               = "D:\\MINHNHUT\\laragon\\bin\\php\\php-8.3.30-Win32-vs16-x64;${env.PATH}"
         NEWMAN_REPORT_DIR  = 'postman-reports'
     }
 
@@ -185,7 +186,7 @@ pipeline {
                                 exit /b 0
                             )
                             set XDEBUG_MODE=coverage
-                            call vendor\\bin\\phpunit --coverage-clover tests/coverage.xml --log-junit tests/junit.xml --colors=never
+                            php vendor\\bin\\phpunit --coverage-clover tests/coverage.xml --log-junit tests/junit.xml --colors=never
                             echo PHPUnit tests completed.
                             exit /b 0
                         '''
