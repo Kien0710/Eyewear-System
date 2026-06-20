@@ -185,7 +185,7 @@ pipeline {
                                 exit /b 0
                             )
                             set XDEBUG_MODE=coverage
-                            call vendor\bin\phpunit --coverage-clover tests/coverage.xml --log-junit tests/junit.xml --colors=never
+                            call vendor\\bin\\phpunit --coverage-clover tests/coverage.xml --log-junit tests/junit.xml --colors=never
                             echo PHPUnit tests completed.
                             exit /b 0
                         '''
