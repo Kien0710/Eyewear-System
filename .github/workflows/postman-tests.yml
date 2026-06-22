@@ -141,6 +141,10 @@ jobs:
           { name: "Eyewear API", file: "./postman-reports/summary-eyewear.json" }
         ];
 
+        let createdCount = 0;
+        let commentedCount = 0;
+        let closedCount = 0;
+
         const requiredEnv = ["JIRA_BASE_URL", "JIRA_USER_EMAIL", "JIRA_API_TOKEN", "PROJECT_KEY"];
         for (const key of requiredEnv) {
           if (!process.env[key]) {
