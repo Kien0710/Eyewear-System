@@ -105,6 +105,7 @@ jobs:
       timeout-minutes: 10
       run: |
         newman run "Eyewear-System.postman_collection.json" \
+          -e "Eyewear-Local-Environment.postman_environment.json" \
           --env-var "baseUrl=http://127.0.0.1:8000/api/v1" \
           --timeout-request 10000 \
           --timeout 120000 \
@@ -367,8 +368,11 @@ jobs:
           closedCount++;
         }
 
-        // ── Handle failures ───────────────────────────────────────────────
-        let createdCount = 0, commentedCount = 0;
+        // Cache git branches ONCE to avoid network timeout/rate-limiting in the loop
+        let cachedBranches = "";
+        try {
+          cachedBranches = execSync("git ls-remote --heads origin", { encoding: "utf8" });
+        } catch (e) { }
 
         for (const [index, bug] of failures.entries()) {
           const existing = findExistingBug(bug);
@@ -378,12 +382,7 @@ jobs:
             const statusName = (existing?.fields?.status?.statusCategory?.name || "").toLowerCase();
             const statusKey = (existing?.fields?.status?.statusCategory?.key || "").toLowerCase();
             
-            const hasBranch = (issueKey) => {
-              try {
-                const out = execSync("git ls-remote --heads origin", { encoding: "utf8" });
-                return out.includes(issueKey);
-              } catch (e) { return false; }
-            };
+            const hasBranch = (issueKey) => cachedBranches.includes(issueKey);
             
             const isWorking = hasBranch(existing.key);
             const isDone = (statusName === "done" || statusKey === "done");
@@ -485,6 +484,11 @@ jobs:
         }
 
         console.log(`\n📌 Jira sync done. Created: ${createdCount} | Commented: ${commentedCount} | Auto-closed: ${closedCount}`);
+        
+        if (failures.length > 0) {
+          console.log("\n❌ Failing the pipeline because there are API errors.");
+          process.exit(1);
+        }
         NODE
 
     - name: Upload Test Reports Artifacts

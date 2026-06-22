@@ -57,7 +57,28 @@ require_once APP_ROOT . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'Inf
 try {
     connect_application_database();
     require_once APP_ROOT . DIRECTORY_SEPARATOR . 'routes' . DIRECTORY_SEPARATOR . 'api.php';
-    \Core\Router::dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
+    
+    $uri = $_SERVER['REQUEST_URI'];
+    // Strip query string if present
+    if (false !== $pos = strpos($uri, '?')) {
+        $uri = substr($uri, 0, $pos);
+    }
+    
+    // Automatically strip subdirectory prefixes (e.g. for XAMPP/Laragon)
+    if (($pos = strpos($uri, '/public/')) !== false) {
+        $uri = substr($uri, $pos + 7);
+    } else {
+        $scriptName = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+        if ($scriptName !== '/' && strpos($uri, $scriptName) === 0) {
+            $uri = substr($uri, strlen($scriptName));
+        }
+    }
+    
+    if ($uri === '') {
+        $uri = '/';
+    }
+
+    \Core\Router::dispatch($_SERVER['REQUEST_METHOD'], $uri);
 } catch (\Throwable $e) {
     echo json_encode(\Core\ApiResponse::serverError('Server error: ' . $e->getMessage()));
 }
