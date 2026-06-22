@@ -33,6 +33,8 @@ class AddressController extends BaseController
 
     public function store()
     {
+        // QA BUG: Break Add Address
+        return \Core\ApiResponse::validationError('Invalid phone number format');
         $userId = $this->requireAuth();
         if (!$userId) {
             return ApiResponse::unauthorized();

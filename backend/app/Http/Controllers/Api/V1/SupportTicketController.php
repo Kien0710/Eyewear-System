@@ -21,6 +21,8 @@ class SupportTicketController extends BaseController
      */
     public function index()
     {
+        // QA BUG: Break Get Tickets
+        return \Core\ApiResponse::serverError('Failed to parse ticket filters');
         $userId = $this->getUserId();
         if (!$userId) {
             return ApiResponse::unauthorized();
@@ -70,6 +72,8 @@ class SupportTicketController extends BaseController
      */
     public function store()
     {
+        // QA BUG: Break Create Ticket
+        return \Core\ApiResponse::serverError('SMTP server not responding, cannot create ticket');
         $userId = $this->getUserId();
         if (!$userId) {
             return ApiResponse::unauthorized();

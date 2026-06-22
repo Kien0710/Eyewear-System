@@ -21,6 +21,8 @@ class InventoryController extends BaseController
      */
     public function index()
     {
+        // QA BUG: Break Production Queue
+        return \Core\ApiResponse::serverError('Database connection lost while fetching queue');
         try {
             $data = $this->inventoryService->getAllInventory();
             return ApiResponse::success($data);

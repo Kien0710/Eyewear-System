@@ -26,7 +26,9 @@ class ProfileController extends BaseController
         }
 
         try {
+            // INTENTIONAL BUG FOR QA: Simulating a missing profile field
             $profile = $this->profileService->getProfile($userId);
+            unset($profile['email']);
             return ApiResponse::success(['profile' => $profile]);
         } catch (Exception $e) {
             return ApiResponse::error('Failed to retrieve profile: ' . $e->getMessage());
