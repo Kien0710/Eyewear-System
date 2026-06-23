@@ -18,8 +18,6 @@ class OrderController extends BaseController
 
     public function index()
     {
-        // QA BUG: Break List All Orders
-        return \Core\ApiResponse::serverError('Memory limit exhausted while fetching orders');
         $userId = $this->getUserId();
         if (!$userId) {
             return ApiResponse::unauthorized();
