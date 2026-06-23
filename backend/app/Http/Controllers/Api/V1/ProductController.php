@@ -70,8 +70,6 @@ class ProductController extends BaseController
         if (!$id) return ApiResponse::validationError('Product ID is required');
 
         try {
-            // INTENTIONAL BUG FOR QA: Simulating a bad logic update
-            return ApiResponse::validationError('Cannot update product, category is restricted');
             $product = $this->catalogService->updateProduct((int)$id, $input);
             return ApiResponse::success($product, 'Product updated successfully');
         } catch (\Exception $e) {
