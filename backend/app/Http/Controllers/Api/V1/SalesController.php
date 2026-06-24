@@ -92,7 +92,7 @@ class SalesController extends BaseController
     public function orderComplaints()
     {
         try {
-            $complaints = $this->salesService->getOrderComplaints($_GET);
+            $complaints = $this->salesService->getOrderComplaints();
             return ApiResponse::success($complaints);
         } catch (Exception $e) {
             return ApiResponse::serverError($e->getMessage());

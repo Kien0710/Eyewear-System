@@ -158,6 +158,16 @@ class SalesVerificationService
     /**
      * Cập nhật thông số độ cận (Prescription) cho một item trong đơn hàng
      */
+    /**
+     * Get all order complaints (support tickets for complaints).
+     */
+    public function getOrderComplaints(): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->query("SELECT * FROM supportticket WHERE subject LIKE '[COMPLAINT]%' ORDER BY created_at DESC");
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
     public function updatePrescription(int $orderItemId, array $data): bool
     {
         $db = Database::getInstance();
