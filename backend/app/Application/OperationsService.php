@@ -116,6 +116,8 @@ class OperationsService
 			$shipment = Shipment::create(array_merge(['order_id' => $orderId], $shipmentData));
 		}
 
+		$orderService = new \App\Application\OrderService();
+
         // Move order to SHIPPED and ensure production step is marked ready_to_ship
         $order->update([
             'production_step' => 'ready_to_ship',
