@@ -10,7 +10,7 @@ class DashboardService
 	{
 		$db = Database::getInstance();
 
-		$revenue = (float) $db->query("SELECT COALESCE(SUM(total_amount), 0) FROM `order` WHERE status IN ('paid', 'processing', 'shipped', 'delivered')")->fetchColumn();
+		$revenue = (float) $db->query("SELECT COALESCE(SUM(amount), 0) FROM payment WHERE status = 'paid'")->fetchColumn();
 		$activeOrders = (int) $db->query("SELECT COUNT(*) FROM `order` WHERE status IN ('pending', 'paid', 'processing', 'shipped')")->fetchColumn();
 		$paidOrders = (int) $db->query("SELECT COUNT(*) FROM `order` WHERE status IN ('paid', 'processing', 'shipped', 'delivered')")->fetchColumn();
 		$averageOrderValue = $paidOrders > 0 ? $revenue / $paidOrders : 0;

@@ -122,7 +122,10 @@ class OperationsService
 			'shipped_at' => $now,
 		]);
 
-        // Move order to SHIPPED
+        // Move order to SHIPPED and ensure production step is marked ready_to_ship
+        $order->update([
+            'production_step' => 'ready_to_ship',
+        ]);
         $orderService->transitionStatus($orderId, 'shipped', 0);
 
 		return $this->getShipmentDetails((int) $shipment->id);

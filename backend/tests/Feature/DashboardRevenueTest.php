@@ -79,10 +79,15 @@ function assertTrue(bool $condition, string $message): void
     }
 }
 
-function captureDashboardResponse(): array
+function captureDashboardResponse(?string $token = null): array
 {
     $_SERVER['REQUEST_METHOD'] = 'GET';
     $_SERVER['REQUEST_URI'] = '/api/v1/dashboard';
+    if ($token !== null) {
+        $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . $token;
+    } else {
+        unset($_SERVER['HTTP_AUTHORIZATION']);
+    }
 
     ob_start();
     $previousErrorReporting = error_reporting(0);
@@ -116,6 +121,26 @@ function runTest(): void
     $userId = (int) $pdo->query("SELECT id FROM `user` ORDER BY id ASC LIMIT 1")->fetchColumn();
     assertTrue($userId > 0, 'No user found to attach test order. Please run seeder first.');
 
+    // Find active user with view_reports permission to generate a token
+    $userQuery = $pdo->prepare("
+        SELECT u.id, r.name AS role_name
+        FROM `user` u
+        JOIN user_roles ur ON u.id = ur.user_id
+        JOIN role r ON ur.role_id = r.id
+        JOIN role_permissions rp ON r.id = rp.role_id
+        JOIN permissions p ON rp.permission_id = p.id
+        WHERE p.name = ? AND u.status = 'active'
+        LIMIT 1
+    ");
+    $userQuery->execute(['view_reports']);
+    $opUser = $userQuery->fetch();
+    assertTrue($opUser !== false, 'No active user with view_reports permission found.');
+
+    $tokenBody = $opUser['id'] . ':' . $opUser['role_name'] . ':' . time();
+    $jwtSecret = $config['JWT_SECRET'] ?? $_ENV['JWT_SECRET'] ?? 'default-secret-key-change-in-env';
+    $signature = hash_hmac('sha256', $tokenBody, $jwtSecret);
+    $token = base64_encode($tokenBody . ':' . $signature);
+
     $productVariantId = (int) $pdo->query("SELECT id FROM productvariant ORDER BY id ASC LIMIT 1")->fetchColumn();
     assertTrue($productVariantId > 0, 'No product variant found. Please run seeder first.');
 
@@ -145,7 +170,7 @@ function runTest(): void
 
     try {
         $dbRevenue = (float) $pdo->query("SELECT COALESCE(SUM(amount), 0) FROM payment WHERE status = 'paid'")->fetchColumn();
-        $apiResponse = captureDashboardResponse();
+        $apiResponse = captureDashboardResponse($token);
         $apiRevenue = (float) ($apiResponse['data']['revenue'] ?? 0);
 
         assertTrue(abs($apiRevenue - $dbRevenue) < 0.01, 'API revenue does not match paid invoices. DB=' . $dbRevenue . ', API=' . $apiRevenue);
