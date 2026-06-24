@@ -152,6 +152,7 @@ Router::group(['prefix' => 'api/v1'], function () {
 
         Router::group(['prefix' => 'ops'], function () {
             Router::get('/', [OperationsController::class, 'index'])->middleware('role:ADMIN|MANAGER|SALES_STAFF|OPERATIONS_STAFF');
+            // ESQ-885: Secure advance production step endpoint with auth and permission check
             Router::post('advance', [OperationsController::class, 'advanceProduction'])->middleware('permission:update_order_status');
             Router::post('shipments', [OperationsController::class, 'createShipment'])->middleware('permission:create_shipment');
             Router::put('shipments', [OperationsController::class, 'updateShipment'])->middleware('permission:update_tracking');
