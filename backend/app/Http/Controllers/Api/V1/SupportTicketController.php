@@ -95,30 +95,46 @@ class SupportTicketController extends BaseController
     /**
      * Add reply to ticket.
      */
-    public function reply()
-    {
-        $userId = $this->getUserId();
-        if (!$userId) {
-            return ApiResponse::unauthorized();
-        }
-
-        $input    = $this->getJsonInput();
-        $ticketId = $input['ticket_id'] ?? null;
-        $message  = $input['message'] ?? '';
-        $isStaff  = $this->hasPermission('contact_customer');
-
-        if (!$ticketId || !$message) {
-            return ApiResponse::validationError('Ticket ID and message are required');
-        }
-
-        try {
-            $reply = $this->supportService->addReply((int) $ticketId, $userId, $message, $isStaff);
-            return ApiResponse::success($reply, 'Reply added successfully');
-        } catch (Exception $e) {
-            return ApiResponse::error($e->getMessage());
-        }
+public function reply()
+{
+    $userId = $this->getUserId();
+    if (!$userId) {
+        return ApiResponse::unauthorized();
     }
 
+    $input = $this->getJsonInput();
+    
+    // 🔍 Debug: Kiểm tra input
+    error_log('Input nhận được: ' . json_encode($input));
+    error_log('Content-Type: ' . ($_SERVER['CONTENT_TYPE'] ?? 'không có'));
+    
+    $ticketId = $input['ticket_id'] ?? null;
+    $message  = $input['message'] ?? '';
+
+    // ⚠️ Validation chi tiết
+    if (!$ticketId || !is_numeric($ticketId)) {
+        return ApiResponse::validationError([
+            'error' => 'ticket_id is required and must be a number',
+            'received' => $ticketId,
+            'input' => $input
+        ]);
+    }
+    
+    if (empty(trim($message))) {
+        return ApiResponse::validationError([
+            'error' => 'message is required and cannot be empty',
+            'received' => $message
+        ]);
+    }
+
+    try {
+        $isStaff = $this->hasPermission('contact_customer');
+        $reply = $this->supportService->addReply((int) $ticketId, $userId, $message, $isStaff);
+        return ApiResponse::success($reply, 'Reply added successfully');
+    } catch (Exception $e) {
+        return ApiResponse::error($e->getMessage());
+    }
+}
     /**
      * Update ticket status (Staff only).
      */
