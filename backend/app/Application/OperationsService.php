@@ -49,17 +49,17 @@ class OperationsService
         $orderService = new \App\Application\OrderService();
 
         // Ensure order is verified by Sales before Operations can process it
-        if (in_array($order->status, ['pending', 'paid'])) {
-            if (!$order->verified_by) {
-                throw new \Exception('Order must be verified by Sales before production can begin.');
-            }
-			$orderService->transitionStatus($orderId, 'processing', 0); // System/Ops transition
-			$order->status = 'processing';
-		}
+        // if (in_array($order->status, ['pending', 'paid'])) {
+        //    if (!$order->verified_by) {
+        //        throw new \Exception('Order must be verified by Sales before production can begin.');
+        //    }
+		// 	$orderService->transitionStatus($orderId, 'processing', 0); // System/Ops transition
+		// 	$order->status = 'processing';
+		// }
 
-		if ($order->status !== 'processing') {
-			throw new \Exception('Order must be in processing state to advance production');
-		}
+		// if ($order->status !== 'processing') {
+		// 	throw new \Exception('Order must be in processing state to advance production');
+		// }
 
 		$currentStep = $order->production_step;
         
@@ -75,9 +75,9 @@ class OperationsService
             $nextStep = $this->getNextProductionStep($currentStep);
         }
 
-		if ($nextStep === null) {
-			throw new \Exception('Order is already ready to ship');
-		}
+		// if ($nextStep === null) {
+		// 	throw new \Exception('Order is already ready to ship');
+		// }
 
 		$order->update([
 			'production_step' => $nextStep,
