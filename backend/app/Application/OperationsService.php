@@ -54,6 +54,7 @@ class OperationsService
                 throw new \Exception('Order must be verified by Sales before production can begin.');
             }
 			$orderService->transitionStatus($orderId, 'processing', 0); // System/Ops transition
+			$order->status = 'processing';
 		}
 
 		if ($order->status !== 'processing') {
