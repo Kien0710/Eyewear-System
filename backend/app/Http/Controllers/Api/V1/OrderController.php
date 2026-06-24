@@ -27,8 +27,13 @@ class OrderController extends BaseController
             $orders = $this->orderService->getOrdersForUser($userId);
             return ApiResponse::success($orders);
         } catch (Exception $e) {
-            return ApiResponse::serverError($e->getMessage());
-        }
+    return response()->json([
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+        'trace' => $e->getTraceAsString()
+    ], 500);
+}
     }
 
     public function show($id = null)
