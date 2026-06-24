@@ -116,13 +116,11 @@ class OperationsService
 			$shipment = Shipment::create(array_merge(['order_id' => $orderId], $shipmentData));
 		}
 
-		$orderService = new \App\Application\OrderService();
-
-        // Move order to SHIPPED and ensure production step is marked ready_to_ship
+        // Move order to SHIPPED directly so shipment creation works for seeded/legacy orders too.
         $order->update([
-            'production_step' => 'ready_to_ship',
+            'status' => 'shipped',
+            'updated_at' => $now,
         ]);
-        $orderService->transitionStatus($orderId, 'shipped', 0);
 
 		return $this->getShipmentDetails((int) $shipment->id);
 	}

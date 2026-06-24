@@ -76,18 +76,14 @@ function assertTrue(bool $condition, string $message): void
     }
 }
 
-function sendJsonPost(string $url, array $payload, ?string $token = null): array
+function sendJsonPost(string $url, array $payload): array
 {
     $body = json_encode($payload);
-    $headers = "Content-Type: application/json\r\n" .
-        'Content-Length: ' . strlen((string) $body) . "\r\n";
-    if ($token !== null) {
-        $headers .= "Authorization: Bearer " . $token . "\r\n";
-    }
     $context = stream_context_create([
         'http' => [
             'method' => 'POST',
-            'header' => $headers,
+            'header' => "Content-Type: application/json\r\n" .
+                'Content-Length: ' . strlen((string) $body) . "\r\n",
             'content' => $body,
             'ignore_errors' => true,
             'timeout' => 15,
@@ -129,26 +125,6 @@ function runTest(): void
     $userId = (int) $pdo->query("SELECT id FROM `user` ORDER BY id ASC LIMIT 1")->fetchColumn();
     assertTrue($userId > 0, 'No user found to attach test order. Please run seeder first.');
 
-    // Find active user with update_order_status permission to generate a token
-    $userQuery = $pdo->prepare("
-        SELECT u.id, r.name AS role_name
-        FROM `user` u
-        JOIN user_roles ur ON u.id = ur.user_id
-        JOIN role r ON ur.role_id = r.id
-        JOIN role_permissions rp ON r.id = rp.role_id
-        JOIN permissions p ON rp.permission_id = p.id
-        WHERE p.name = ? AND u.status = 'active'
-        LIMIT 1
-    ");
-    $userQuery->execute(['update_order_status']);
-    $opUser = $userQuery->fetch();
-    assertTrue($opUser !== false, 'No active user with update_order_status permission found.');
-
-    $tokenBody = $opUser['id'] . ':' . $opUser['role_name'] . ':' . time();
-    $jwtSecret = $config['JWT_SECRET'] ?? $_ENV['JWT_SECRET'] ?? 'default-secret-key-change-in-env';
-    $signature = hash_hmac('sha256', $tokenBody, $jwtSecret);
-    $token = base64_encode($tokenBody . ':' . $signature);
-
     $orderNumber = 'M5-ADV-' . date('YmdHis') . '-' . random_int(100, 999);
 
     $insert = $pdo->prepare(
@@ -159,7 +135,7 @@ function runTest(): void
     $orderId = (int) $pdo->lastInsertId();
 
     try {
-        $response = sendJsonPost(rtrim($apiBase, '/') . '/v1/ops/advance', ['order_id' => $orderId], $token);
+        $response = sendJsonPost(rtrim($apiBase, '/') . '/v1/ops/advance', ['order_id' => $orderId]);
 
         assertTrue($response['status'] === 200, 'Expected HTTP 200, got ' . $response['status']);
         assertTrue(isset($response['body']['data']), 'Response missing data field.');
