@@ -245,21 +245,56 @@ CREATE TABLE IF NOT EXISTS `order` (
 	total_amount DECIMAL(12,2) NOT NULL,
 	discount_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
 	shipping_fee DECIMAL(12,2) NOT NULL DEFAULT 0.00,
-	status ENUM('pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded') DEFAULT 'pending',
+
+	status ENUM(
+		'pending',
+		'paid',
+		'processing',
+		'shipped',
+		'delivered',
+		'cancelled',
+		'refunded'
+	) DEFAULT 'pending',
+
+	order_type ENUM(
+		'stock',
+		'pre_order',
+		'prescription'
+	) DEFAULT 'stock',
+
 	shipping_address TEXT NOT NULL,
 	billing_address TEXT NULL,
 	placed_at DATETIME NOT NULL,
-	production_step ENUM('lens_cutting', 'frame_mounting', 'qc_inspection', 'packaging', 'ready_to_ship') NULL,
+
+	production_step ENUM(
+		'lens_cutting',
+		'frame_mounting',
+		'qc_inspection',
+		'packaging',
+		'ready_to_ship'
+	) NULL,
+
 	verified_by BIGINT UNSIGNED NULL,
 	verified_at TIMESTAMP NULL,
+
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES `user`(id)
-		ON UPDATE CASCADE ON DELETE RESTRICT,
-	CONSTRAINT fk_order_promotion FOREIGN KEY (promotion_id) REFERENCES promotion(id)
-		ON UPDATE CASCADE ON DELETE SET NULL,
-	CONSTRAINT fk_order_verified_by FOREIGN KEY (verified_by) REFERENCES `user`(id)
-		ON UPDATE CASCADE ON DELETE SET NULL
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		ON UPDATE CURRENT_TIMESTAMP,
+
+	CONSTRAINT fk_order_user FOREIGN KEY (user_id)
+		REFERENCES `user`(id)
+		ON UPDATE CASCADE
+		ON DELETE RESTRICT,
+
+	CONSTRAINT fk_order_promotion FOREIGN KEY (promotion_id)
+		REFERENCES promotion(id)
+		ON UPDATE CASCADE
+		ON DELETE SET NULL,
+
+	CONSTRAINT fk_order_verified_by FOREIGN KEY (verified_by)
+		REFERENCES `user`(id)
+		ON UPDATE CASCADE
+		ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS orderitem (
@@ -523,20 +558,9 @@ PREPARE stmt_fk_product_category FROM @fk_product_category_sql;
 EXECUTE stmt_fk_product_category;
 DEALLOCATE PREPARE stmt_fk_product_category;
 
-SET @order_order_type_exists = (
-	SELECT COUNT(*)
-	FROM information_schema.COLUMNS
-	WHERE TABLE_SCHEMA = DATABASE()
-	  AND TABLE_NAME = 'order'
-	  AND COLUMN_NAME = 'order_type'
-);
-SET @order_order_type_sql = IF(
-	@order_order_type_exists = 0,
-	'ALTER TABLE `order` ADD COLUMN order_type ENUM(''stock'', ''pre_order'', ''prescription'') DEFAULT ''stock''',
-	'DO 0'
-);
-PREPARE stmt_order_order_type FROM @order_order_type_sql;
-EXECUTE stmt_order_order_type;
-DEALLOCATE PREPARE stmt_order_order_type;
-
 SET FOREIGN_KEY_CHECKS = 1;
+CREATE INDEX idx_order_user_id ON `order`(user_id);
+CREATE INDEX idx_payment_order_id ON payment(order_id);
+CREATE INDEX idx_orderitem_order_id ON orderitem(order_id);
+CREATE INDEX idx_cart_user_id ON cart(user_id);
+CREATE INDEX idx_product_category_id ON product(category_id);
