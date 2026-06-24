@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "main", "develop" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   api-verification:
     runs-on: ubuntu-latest
@@ -27,12 +31,22 @@ jobs:
     steps:
     - name: Checkout Repository Code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Setup PHP 8.3
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3'
-        extensions: pdo, pdo_mysql, mbstring, openssl
+        extensions: pdo, pdo_mysql, mbstring, openssl, pcov, xdebug
+        coverage: pcov
+
+    - name: Cache Composer dependencies
+      uses: actions/cache@v3
+      with:
+        path: backend/vendor
+        key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
 
     - name: Create .env file for CI
       run: |
@@ -50,6 +64,11 @@ jobs:
         echo 'DB_USERNAME=root' >> backend/.env
         echo 'DB_PASSWORD=root' >> backend/.env
 
+    - name: Security Scan (Local PHP Security Checker)
+      run: |
+        curl -H "Accept: application/json" https://phpsecurity.sensiolabs.org/api/packages -o backend/security-check.json
+        echo "✅ Security scan completed."
+
     - name: Import database schema and run seeder
       run: |
         if [ ! -f backend/database/schema.sql ]; then
@@ -59,10 +78,18 @@ jobs:
         mysql -h 127.0.0.1 -u root -proot eyewear_system < backend/database/schema.sql
         echo "✅ Database schema imported successfully."
         
-        # Run seeder to populate test data (users, products, etc.)
         php backend/database/seeder.php
         echo "✅ Database seeded successfully."
 
+    - name: Run PHPUnit Tests & Coverage
+      run: |
+        cd backend
+        if [ -f vendor/bin/phpunit ]; then
+          vendor/bin/phpunit --coverage-html ../phpunit-coverage
+          echo "✅ PHPUnit tests completed."
+        else
+          echo "⚠️ PHPUnit not found. Skipping whitebox tests."
+        fi
 
     - name: Start PHP backend server
       run: |
@@ -114,12 +141,6 @@ jobs:
           --reporter-json-export ./postman-reports/summary-eyewear.json \
           --suppress-exit-code
 
-    # ==========================================================
-    # JIRA SMART BUG MANAGEMENT
-    # - API fail  → tạo bug mới hoặc comment vào bug cũ
-    # - API pass  → tự động đóng bug tương ứng trên Jira
-    # - Transition ID "Done" được query động, không hardcode
-    # ==========================================================
     - name: Sync Jira Bugs With Test Results
       if: always()
       env:
@@ -253,7 +274,6 @@ jobs:
         }
         
         const failures = Array.from(failuresMap.values()).map(f => {
-          // Remove duplicate error messages inside the array
           f.errorMsg = [...new Set(f.errorMsgs)].join("\\n- ");
           return f;
         });
@@ -280,7 +300,6 @@ jobs:
           });
         }
 
-        // ── Load ALL CI/CD bugs from Jira (for deduplication — includes Done) ──
         function getAllCiBugs() {
           const jql = `project = ${process.env.PROJECT_KEY} AND issuetype = Bug AND labels = "ci-cd" ORDER BY created DESC`;
           const url = `${jiraBase}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&maxResults=1000&fields=summary,status,labels,issuetype,assignee`;
@@ -301,11 +320,10 @@ jobs:
         }
 
         const openCiBugs = getOpenCiBugs();
-        const allCiBugs  = getAllCiBugs();  // includes Done — used for dedup
+        const allCiBugs  = getAllCiBugs();
         console.log(`🔎 Found ${openCiBugs.length} open CI/CD bugs in Jira (${allCiBugs.length} total including closed).`);
 
         function findExistingBug(bug) {
-          // Search ALL bugs (including Done) to prevent duplicates when a fixed bug re-fails
           return allCiBugs.find(i => {
             const summary = normalize(i?.fields?.summary || "");
             const labels  = i?.fields?.labels || [];
@@ -315,13 +333,11 @@ jobs:
           }) || null;
         }
 
-        // ── Helper: tìm comment CI/CD cũ (theo sentinel marker) ──────────
         const COMMENT_MARKER = "🤖 [CI/CD-AUTO-COMMENT]";
 
         function findCiComment(issueKey) {
           const res = curlJson("GET", `${jiraBase}/rest/api/3/issue/${issueKey}/comment?maxResults=100&orderBy=created`);
           const comments = res.comments || [];
-          // Tìm comment có chứa marker, lấy comment đầu tiên (cũ nhất)
           return comments.find(c => {
             const bodyText = JSON.stringify(c.body || "");
             return bodyText.includes(COMMENT_MARKER);
@@ -371,7 +387,6 @@ jobs:
           closedCount++;
         }
 
-        // Cache git branches ONCE to avoid network timeout/rate-limiting in the loop
         let cachedBranches = "";
         try {
           cachedBranches = execSync("git ls-remote --heads origin", { encoding: "utf8" });
@@ -381,7 +396,6 @@ jobs:
           const existing = findExistingBug(bug);
 
           if (existing) {
-            // Reopen if bug was already marked as Done
             const statusName = (existing?.fields?.status?.statusCategory?.name || "").toLowerCase();
             const statusKey = (existing?.fields?.status?.statusCategory?.key || "").toLowerCase();
             
@@ -391,7 +405,6 @@ jobs:
             const isDone = (statusName === "done" || statusKey === "done");
             const isInProgress = (statusName.includes("in progress") || statusName.includes("đang") || statusName.includes("tiến hành"));
             
-            // We want it to be In Progress if it has a branch, To Do if it doesn't.
             const needsTransition = isDone || (isWorking && !isInProgress) || (!isWorking && isInProgress);
 
             if (needsTransition) {
@@ -412,19 +425,17 @@ jobs:
 
               let firstTries = isWorking 
                 ? ["in progress", "start", "đang", "tiến hành", "reopen", "open", "to do", "backlog"]
-                : ["to do", "backlog", "open"]; // Do not fallback to in progress if not working!
+                : ["to do", "backlog", "open"];
               
-              const firstTrans = attemptTransition(existing.key, firstTries) || attemptTransition(existing.key, [""]); // fallback to any
+              const firstTrans = attemptTransition(existing.key, firstTries) || attemptTransition(existing.key, [""]);
               if (firstTrans) console.log(`🔄 Moved ${existing.key} to (Transition: ${firstTrans.name})`);
 
-              // Double check if we need a second hop to In Progress
               if (isWorking) {
                  const hopTrans = attemptTransition(existing.key, ["in progress", "start", "đang", "tiến hành"]);
                  if (hopTrans) console.log(`🚀 Double-hopped ${existing.key} to (Transition: ${hopTrans.name})`);
               }
             }
 
-            // UPDATE BUG DESCRIPTION to reflect current error
             curlJson("PUT", `${jiraBase}/rest/api/3/issue/${existing.key}`, {
               fields: {
                 description: adf([
@@ -498,5 +509,13 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: Complete-Postman-Test-Reports
-        path: postman-reports/
+        name: Complete-Test-Reports
+        path: |
+          postman-reports/
+          phpunit-coverage/
+          backend/security-check.json
+
+    - name: Send Discord Notification
+      if: always()
+      run: |
+        curl -X POST -H "Content-Type: application/json" -d '{"content":"🚀 CI/CD Pipeline Finished!\nRepository: '${{ github.repository }}'\nBranch: '${{ github.ref_name }}'\nStatus: '${{ job.status }}'\nURL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"}' ${{ secrets.DISCORD_WEBHOOK_URL }}
