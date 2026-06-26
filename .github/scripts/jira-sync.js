@@ -107,7 +107,7 @@ async function main() {
           moduleName: item.name,
           apiName,
           errorMsgs: [errorMsg],
-          bugKey: slugify(`${item.name}-${apiName}`),
+          bugKey: slugify(`v2-${item.name}-${apiName}`),
           summary: `❌ [CI/CD] Lỗi API: ${apiName} (${item.name})`
         });
       } else {
