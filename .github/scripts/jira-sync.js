@@ -144,7 +144,7 @@ async function main() {
     let startAt = 0;
     const maxResults = 100;
     while (true) {
-      const url = `${jiraBase}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&startAt=${startAt}&maxResults=${maxResults}&fields=summary,status,labels,issuetype,assignee`;
+      const url = `${jiraBase}/rest/api/3/search?jql=${encodeURIComponent(jql)}&startAt=${startAt}&maxResults=${maxResults}&fields=summary,status,labels,issuetype,assignee`;
       const res = await fetchJson("GET", url);
       if (!res || res.errorMessages || res.errors) {
         console.log("❌ Jira search error:", JSON.stringify(res).slice(0, 500));
@@ -154,9 +154,12 @@ async function main() {
         break;
       }
       issues = issues.concat(res.issues);
-      if (startAt + res.issues.length >= res.total) {
-        break;
-      }
+      
+      // Strict pagination breaks
+      if (res.issues.length < maxResults) break;
+      if (res.total && startAt + res.issues.length >= res.total) break;
+      if (startAt > 5000) break; // Circuit breaker
+      
       startAt += res.issues.length;
     }
     return issues;
