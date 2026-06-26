@@ -107,7 +107,7 @@ async function main() {
           moduleName: item.name,
           apiName,
           errorMsgs: [errorMsg],
-          bugKey: slugify(`v2-${item.name}-${apiName}`),
+          bugKey: slugify(`${item.name}-${apiName}`),
           summary: `❌ [CI/CD] Lỗi API: ${apiName} (${item.name})`
         });
       } else {
@@ -360,47 +360,38 @@ async function main() {
         type: "doc",
         content: [
           { type: "paragraph", content: [{ type: "text", text: COMMENT_MARKER, marks: [{ type: "strong" }] }] },
-          {
-            type: "heading",
-            attrs: { level: 3 },
-            content: [{ type: "text", text: "🚨 CI/CD vẫn phát hiện lỗi này (Bug tái diễn - Reopened)" }]
-          },
-          {
-            type: "paragraph",
-            content: [
-              { type: "text", text: "Người kích hoạt (Triggered by): ", marks: [{ type: "strong" }] },
-              { type: "text", text: process.env.ACTOR }
-            ]
-          },
-          {
-            type: "paragraph",
-            content: [
-              { type: "text", text: "❌ Lỗi Assertions phát hiện từ Postman:", marks: [{ type: "strong" }] }
-            ]
-          },
-          {
-            type: "codeBlock",
-            attrs: { language: "text" },
-            content: [{ type: "text", text: bug.errorMsg }]
-          },
-          {
-            type: "paragraph",
-            content: [
-              { type: "text", text: "🛠 Chi tiết Request (Execution Details):", marks: [{ type: "strong" }] }
-            ]
-          },
-          {
-            type: "codeBlock",
-            attrs: { language: "http" },
-            content: [{ type: "text", text: bug.details }]
-          },
-          {
-            type: "paragraph",
-            content: [
+          { type: "heading", attrs: { level: 3 }, content: [{ type: "text", text: "🚨 BÁO CÁO LỖI TÁI DIỄN TỪ CI/CD (REOPENED)" }] },
+          { type: "paragraph", content: [{ type: "text", text: "Hệ thống kiểm thử tự động phát hiện API này vẫn đang bị lỗi hoặc đã bị lỗi lại." }] },
+          { type: "bulletList", content: [
+              { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Bộ kịch bản (Module): ", marks: [{ type: "strong" }] }, { type: "text", text: bug.moduleName }] }] },
+              { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Tên API (Endpoint): ", marks: [{ type: "strong" }] }, { type: "text", text: bug.apiName }] }] }
+          ]},
+          { type: "paragraph", content: [{ type: "text", text: "👣 Các bước tái hiện (Steps to Reproduce):", marks: [{ type: "strong" }] }] },
+          { type: "orderedList", content: [
+              { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: `Gửi HTTP Request tới endpoint của API ` }, { type: "text", text: bug.apiName, marks: [{ type: "strong" }] }] }] },
+              { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Truyền các tham số Payload/Headers như trong khối Request bên dưới." }] }] },
+              { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Quan sát kết quả (Actual Result) trả về không khớp với Assertions (Expected Result)." }] }] }
+          ]},
+          { type: "paragraph", content: [{ type: "text", text: "❌ Dấu hiệu lỗi (Symptom & Expected Result):", marks: [{ type: "strong" }] }] },
+          { type: "codeBlock", attrs: { language: "text" }, content: [{ type: "text", text: bug.errorMsg }] },
+          { type: "paragraph", content: [{ type: "text", text: "🛠 Payload / Thông tin Request (Actual Result):", marks: [{ type: "strong" }] }] },
+          { type: "codeBlock", attrs: { language: "http" }, content: [{ type: "text", text: bug.details || "Không có" }] },
+          { type: "heading", attrs: { level: 3 }, content: [{ type: "text", text: "🌍 THÔNG TIN MÔI TRƯỜNG (Environment Context)" }] },
+          { type: "bulletList", content: [
+              { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Môi trường (Environment): ", marks: [{ type: "strong" }] }, { type: "text", text: "CI/CD Staging (GitHub Actions)" }] }] },
+              { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Hệ điều hành / Nền tảng: ", marks: [{ type: "strong" }] }, { type: "text", text: "Ubuntu Latest / PHP 8.3 / Node 22" }] }] },
+              { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Cơ sở dữ liệu (Database): ", marks: [{ type: "strong" }] }, { type: "text", text: "MySQL 8.0 (Dockerized)" }] }] }
+          ]},
+          { type: "heading", attrs: { level: 3 }, content: [{ type: "text", text: "📊 ĐÁNH GIÁ MỨC ĐỘ ẢNH HƯỞNG" }] },
+          { type: "bulletList", content: [
+              { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Tần số xuất hiện (Frequency): ", marks: [{ type: "strong" }] }, { type: "text", text: "Liên tục (100% reproducible trên CI/CD)" }] }] },
+              { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Reporter & Date: ", marks: [{ type: "strong" }] }, { type: "text", text: `Kích hoạt bởi ${process.env.ACTOR}` }] }] }
+          ]},
+          { type: "paragraph", content: [{ type: "text", text: "⚖️ QUYẾT ĐỊNH (Decision): ", marks: [{ type: "strong" }] }, { type: "text", text: "Yêu cầu Developer fix lỗi này ngay trong Sprint hiện tại. Trạng thái pipeline đang bị chặn (Failed).", marks: [{ type: "strong" }] }] },
+          { type: "paragraph", content: [
               { type: "text", text: "🔗 " },
-              { type: "text", text: "Nhấn vào đây để xem Log chi tiết trên GitHub Actions", marks: [{ type: "link", attrs: { href: runUrl } }] }
-            ]
-          }
+              { type: "text", text: `Xem báo cáo chi tiết trên GitHub Actions (Run #${process.env.RUN_NUMBER} - Nhánh ${process.env.BRANCH})`, marks: [{ type: "link", attrs: { href: runUrl } }] }
+          ] }
         ]
       };
       const action = await upsertComment(existing.key, adfBody);
@@ -436,10 +427,22 @@ async function main() {
                   { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Bộ kịch bản (Module): ", marks: [{ type: "strong" }] }, { type: "text", text: bug.moduleName }] }] },
                   { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Tên API (Endpoint): ", marks: [{ type: "strong" }] }, { type: "text", text: bug.apiName }] }] }
               ]},
-              { type: "paragraph", content: [{ type: "text", text: "❌ Dấu hiệu lỗi (Symptom):", marks: [{ type: "strong" }] }] },
+              { type: "paragraph", content: [{ type: "text", text: "👣 Các bước tái hiện (Steps to Reproduce):", marks: [{ type: "strong" }] }] },
+              { type: "orderedList", content: [
+                  { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: `Gửi HTTP Request tới endpoint của API ` }, { type: "text", text: bug.apiName, marks: [{ type: "strong" }] }] }] },
+                  { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Truyền các tham số Payload/Headers như trong khối Request bên dưới." }] }] },
+                  { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Quan sát kết quả (Actual Result) trả về không khớp với Assertions (Expected Result)." }] }] }
+              ]},
+              { type: "paragraph", content: [{ type: "text", text: "❌ Dấu hiệu lỗi (Symptom & Expected Result):", marks: [{ type: "strong" }] }] },
               { type: "codeBlock", attrs: { language: "text" }, content: [{ type: "text", text: bug.errorMsg }] },
-              { type: "paragraph", content: [{ type: "text", text: "🛠 Payload / Thông tin Request:", marks: [{ type: "strong" }] }] },
+              { type: "paragraph", content: [{ type: "text", text: "🛠 Payload / Thông tin Request (Actual Result):", marks: [{ type: "strong" }] }] },
               { type: "codeBlock", attrs: { language: "http" }, content: [{ type: "text", text: bug.details || "Không có" }] },
+              { type: "heading", attrs: { level: 3 }, content: [{ type: "text", text: "🌍 THÔNG TIN MÔI TRƯỜNG (Environment Context)" }] },
+              { type: "bulletList", content: [
+                  { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Môi trường (Environment): ", marks: [{ type: "strong" }] }, { type: "text", text: "CI/CD Staging (GitHub Actions)" }] }] },
+                  { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Hệ điều hành / Nền tảng: ", marks: [{ type: "strong" }] }, { type: "text", text: "Ubuntu Latest / PHP 8.3 / Node 22" }] }] },
+                  { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Cơ sở dữ liệu (Database): ", marks: [{ type: "strong" }] }, { type: "text", text: "MySQL 8.0 (Dockerized)" }] }] }
+              ]},
               { type: "heading", attrs: { level: 3 }, content: [{ type: "text", text: "📊 ĐÁNH GIÁ MỨC ĐỘ ẢNH HƯỞNG" }] },
               { type: "bulletList", content: [
                   { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Mức độ nghiêm trọng (Severity): ", marks: [{ type: "strong" }] }, { type: "text", text: priorityName === "Highest" ? "Nghiêm trọng (Critical) - Ảnh hưởng luồng chính" : priorityName === "High" ? "Cao (Major) - Lỗi chức năng quan trọng" : "Trung bình (Minor)" }] }] },
