@@ -118,7 +118,10 @@ async function main() {
     for (const exec of (data?.run?.executions || [])) {
       const apiName = normalize(exec?.item?.name || "");
       if (apiName && !failedApis.has(apiName)) {
-        passedApis.set(`${item.name}|||${apiName}`, exec?.response?.responseTime || "N/A");
+        passedApis.set(`${item.name}|||${apiName}`, {
+          time: exec?.response?.responseTime || "N/A",
+          code: exec?.response?.code || "200"
+        });
       }
       
       const key = `${item.name}|||${apiName}`;
@@ -232,14 +235,16 @@ async function main() {
     let matched   = false;
     let matchedApi = "Không xác định";
     let matchedTime = "N/A";
+    let matchedCode = "200";
 
-    for (const [passedKey, time] of passedApis.entries()) {
+    for (const [passedKey, passData] of passedApis.entries()) {
       const [modName, apiName] = passedKey.split("|||");
       const bk = slugify(`${modName}-${apiName}`);
       if (labels.includes(`api-${bk}`) || (summary.includes("[CI/CD]") && summary.includes(apiName) && summary.includes(modName))) {
         matched = true;
         matchedApi = `[${modName}] ${apiName}`;
-        matchedTime = time;
+        matchedTime = passData.time;
+        matchedCode = passData.code;
         break;
       }
     }
@@ -258,7 +263,7 @@ async function main() {
         { type: "paragraph", content: [{ type: "text", text: `Hệ thống CI/CD xác nhận API `, marks: [{ type: "strong" }]}, { type: "text", text: `${matchedApi}` }, { type: "text", text: ` đã hoàn toàn vượt qua bài kiểm tra tự động.`, marks: [{ type: "strong" }]}] },
         { type: "paragraph", content: [{ type: "text", text: "Báo cáo chất lượng (Quality Report):" }] },
         { type: "bulletList", content: [
-            { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Status Code: Trả về 20x hợp lệ theo tài liệu thiết kế (SRS)." }] }] },
+            { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: `Status Code: Trả về chính xác mã ${matchedCode} hợp lệ theo tài liệu thiết kế (SRS).` }] }] },
             { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "BVA & EP: Toàn bộ kiểm thử biên và phân hoạch tương đương đã PASS." }] }] },
             { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Response Schema: Cấu trúc JSON trả về chính xác, không bị thiếu trường." }] }] },
             { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: `Hiệu năng (Response Time): Thực tế đạt ${matchedTime}ms (Đạt chuẩn tối ưu).` }] }] }
