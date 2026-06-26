@@ -407,6 +407,22 @@ async function main() {
       console.log(`💬 Added CI/CD comment on (${existing.key}) — [${bug.apiName}] still failing.`);
       commentedCount++;
     } else {
+      
+      // Calculate priority dynamically based on business impact
+      let priorityName = "High";
+      const modLower = (bug.moduleName || "").toLowerCase();
+      const apiLower = (bug.apiName || "").toLowerCase();
+      
+      if (modLower.includes("auth") || modLower.includes("payment") || modLower.includes("checkout") || apiLower.includes("login") || apiLower.includes("order")) {
+        priorityName = "Highest";
+      } else if (modLower.includes("cart") || modLower.includes("profile") || apiLower.includes("address")) {
+        priorityName = "High";
+      } else if (modLower.includes("product") || modLower.includes("catalog") || apiLower.includes("search")) {
+        priorityName = "Medium";
+      } else {
+        priorityName = "Medium";
+      }
+
       const jiraData = {
         fields: {
           project: { key: process.env.PROJECT_KEY },
@@ -424,7 +440,7 @@ async function main() {
             "Báo cáo HTML: tải trong mục Artifacts trên GitHub Actions."
           ]),
           issuetype: { name: "Bug" },
-          priority:  { name: "High" },
+          priority:  { name: priorityName },
           labels: ["ci-cd", "postman", "auto-detected", `api-${bug.bugKey}`],
           assignee:  { accountId: members[index % members.length] }
         }
