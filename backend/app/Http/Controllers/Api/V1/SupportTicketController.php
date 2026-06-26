@@ -86,8 +86,7 @@ class SupportTicketController extends BaseController
 
         try {
             $ticket = $this->supportService->createTicket($userId, $subject, $message, $orderId);
-            return ApiResponse::serverError("QA Bug: Mail server timeout when creating ticket."); // QA Injected Bug
-            // return ApiResponse::created($ticket, 'Ticket created successfully');
+            return ApiResponse::created($ticket, 'Ticket created successfully');
         } catch (Exception $e) {
             return ApiResponse::serverError($e->getMessage());
         }
