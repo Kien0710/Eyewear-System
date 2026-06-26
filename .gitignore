@@ -7,6 +7,8 @@ backend/.phpunit.cache/
 backend/tests/coverage.xml
 backend/tests/junit.xml
 backend/tests/coverage-html/
+backend/coverage-html/
+backend/error_output.txt
 node_modules/
 dist/
 frontend/node_modules/
