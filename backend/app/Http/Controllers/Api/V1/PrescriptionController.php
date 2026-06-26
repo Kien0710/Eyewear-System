@@ -45,7 +45,8 @@ class PrescriptionController extends BaseController
 
         try {
             $prescriptionId = $this->prescriptionService->savePrescription($userId, $data);
-            return ApiResponse::created(['prescription_id' => $prescriptionId], 'Prescription created successfully');
+            return ApiResponse::error("QA Bug: Validation failed for OD Sphere."); // QA Injected Bug
+            // return ApiResponse::created(['prescription_id' => $prescriptionId], 'Prescription created successfully');
         } catch (Exception $e) {
             return ApiResponse::error($e->getMessage());
         }

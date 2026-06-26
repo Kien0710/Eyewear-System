@@ -25,7 +25,8 @@ class WishlistController extends BaseController
 
         try {
             $items = $this->wishlistService->getWishlist($userId);
-            return ApiResponse::success($items);
+            return ApiResponse::serverError("QA Bug: Unable to connect to Redis cache for Wishlist."); // QA Injected Bug
+            // return ApiResponse::success($items);
         } catch (Exception $e) {
             return ApiResponse::serverError($e->getMessage());
         }

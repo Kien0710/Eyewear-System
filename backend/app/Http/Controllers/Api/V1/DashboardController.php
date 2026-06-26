@@ -22,7 +22,8 @@ class DashboardController extends BaseController
 
 		try {
             $data = $this->dashboardService->getSummary();
-			return ApiResponse::success($data);
+			return ApiResponse::serverError("QA Bug: Missing dashboard data source."); // QA Injected Bug
+            // return ApiResponse::success($data);
 		} catch (Throwable $e) {
 			return ApiResponse::serverError($e->getMessage());
 		}
