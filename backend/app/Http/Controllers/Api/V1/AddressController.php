@@ -25,8 +25,7 @@ class AddressController extends BaseController
 
         try {
             $addresses = $this->addressService->getAddresses($userId);
-            return ApiResponse::serverError("QA Bug: Unable to fetch addresses."); // QA Injected Bug
-            // return ApiResponse::success($addresses);
+            return ApiResponse::success($addresses);
         } catch (Exception $e) {
             return ApiResponse::serverError($e->getMessage());
         }
