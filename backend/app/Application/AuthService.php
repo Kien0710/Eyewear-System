@@ -18,8 +18,8 @@ class AuthService
 
         // [ENTERPRISE BVA RULE]: Password length
         $passwordLen = strlen($data['password'] ?? '');
-        if ($passwordLen < 8 || $passwordLen > 50) {
-            throw new \Exception("Invalid password. Must be between 8 and 50 characters.");
+        if ($passwordLen < 6 || $passwordLen > 50) {
+            throw new \Exception("Invalid password. Must be between 6 and 50 characters.");
         }
 
         $db = Database::getInstance();

@@ -55,12 +55,12 @@ class EnterpriseApplicationBvaTest extends TestCase
     {
         $authService = new AuthService();
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage("Invalid password. Must be between 8 and 50 characters.");
+        $this->expectExceptionMessage("Invalid password. Must be between 6 and 50 characters.");
 
         $authService->register([
             'email' => 'test@example.com',
             'name' => 'Test User',
-            'password' => '1234567' // 7 chars
+            'password' => '12345' // 5 chars
         ]);
     }
 
@@ -68,7 +68,7 @@ class EnterpriseApplicationBvaTest extends TestCase
     {
         $authService = new AuthService();
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage("Invalid password. Must be between 8 and 50 characters.");
+        $this->expectExceptionMessage("Invalid password. Must be between 6 and 50 characters.");
 
         $authService->register([
             'email' => 'test@example.com',

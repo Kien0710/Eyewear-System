@@ -127,13 +127,13 @@ class ComprehensiveBvaEpTest extends TestCase
     // ==========================================
 
     /**
-     * Test BVA-PWD-01: Mật khẩu ngắn hơn 8 ký tự
-     * Tại sao Pass: Controller yêu cầu min:8. Dài 7 ký tự sẽ fail validation.
+     * Test BVA-PWD-01: Mật khẩu ngắn hơn 6 ký tự
+     * Tại sao Pass: Controller yêu cầu min:6. Dài 5 ký tự sẽ fail validation.
      */
     public function test_BVA_PWD_01_length_below_boundary() {
-        $password = "1234567"; // 7 chars
-        $isValidPassword = (strlen($password) >= 8 && strlen($password) <= 50);
-        $this->assertFalse($isValidPassword, "Mật khẩu 7 ký tự vi phạm điều kiện biên.");
+        $password = "12345"; // 5 chars
+        $isValidPassword = (strlen($password) >= 6 && strlen($password) <= 50);
+        $this->assertFalse($isValidPassword, "Mật khẩu 5 ký tự vi phạm điều kiện biên.");
     }
 
     // ==========================================
