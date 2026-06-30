@@ -105,7 +105,7 @@ class SupportTicketService
             throw new \Exception('Ticket not found');
         }
         // Chỉ cho phép chủ ticket hoặc staff reply
-        if (!$isStaff && $ticket->user_id !== $userId) {
+        if (!$isStaff && (int)$ticket->user_id !== (int)$userId) {
             throw new \Exception('Permission denied: Only ticket owner or staff can reply');
         }
         // Tạo reply
