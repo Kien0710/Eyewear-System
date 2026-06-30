@@ -139,6 +139,7 @@ jobs:
       timeout-minutes: 10
       run: |
         echo "🔄 Resetting database for Newman tests..."
+        mysql -h 127.0.0.1 -u root -proot -e "DROP DATABASE IF EXISTS eyewear_system; CREATE DATABASE eyewear_system;"
         mysql -h 127.0.0.1 -u root -proot eyewear_system < backend/database/schema.sql
         php backend/database/seeder.php
         
