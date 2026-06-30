@@ -103,6 +103,12 @@ class EnterpriseIntegrationCoverageTest extends TestCase
     }
     public function test_auth_service_real_db(): void
     {
+        $db = Database::getInstance();
+        $tempHash = password_hash('123', PASSWORD_DEFAULT);
+        $tempEmail = 'temp_auth_' . uniqid() . '@example.com';
+        $db->exec("INSERT INTO `user` (full_name, email, password_hash, status) VALUES ('Temp Auth Test', '$tempEmail', '$tempHash', 'active')");
+        $tempUserId = (int)$db->lastInsertId();
+
         $service = new \App\Application\AuthService();
         try { $service->login(['email' => 'test@example.com', 'password' => 'wrongpass']); } catch (\Throwable $e) {$this->assertTrue(true);}
         try { $service->register(['email' => 'newuser@example.com', 'password' => '12345678', 'name' => 'New']); } catch (\Throwable $e) {$this->assertTrue(true);}
@@ -111,9 +117,22 @@ class EnterpriseIntegrationCoverageTest extends TestCase
         try { $service->verifyEmail('dummy_token'); } catch (\Throwable $e) {$this->assertTrue(true);}
         try { $service->requestPasswordReset('test@example.com'); } catch (\Throwable $e) {$this->assertTrue(true);}
         try { $service->resetPassword(['token' => 'dummy', 'password' => '12345678']); } catch (\Throwable $e) {$this->assertTrue(true);}
-        try { $service->changePassword(1, '123', '456'); } catch (\Throwable $e) {$this->assertTrue(true);}
+        try { $service->changePassword($tempUserId, '123', '456'); } catch (\Throwable $e) {$this->assertTrue(true);}
         try { $service->getUserIdFromToken('token'); } catch (\Throwable $e) {$this->assertTrue(true);}
-        try { $service->getUserById(1); } catch (\Throwable $e) {$this->assertTrue(true);}
+        try { $service->getUserById($tempUserId); } catch (\Throwable $e) {$this->assertTrue(true);}
+        
+        // Clean up temp user
+        $db->exec("DELETE FROM user_roles WHERE user_id = $tempUserId");
+        $db->exec("DELETE FROM `user` WHERE id = $tempUserId");
+
+        // Restore/Ensure admin user (ID 1) is active, has ADMIN role and password '123'
+        $adminHash = password_hash('123', PASSWORD_DEFAULT);
+        $db->exec("UPDATE `user` SET status = 'active', password_hash = '$adminHash' WHERE id = 1");
+        $roleAdmin = $db->query("SELECT id FROM role WHERE name = 'ADMIN'")->fetchColumn();
+        if ($roleAdmin) {
+            $db->exec("INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (1, $roleAdmin)");
+        }
+
         $this->assertTrue(true);
 
     }
