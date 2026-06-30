@@ -165,6 +165,7 @@ jobs:
         RUN_ID: ${{ github.run_id }}
         RUN_NUMBER: ${{ github.run_number }}
         REPOSITORY: ${{ github.repository }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: node .github/scripts/jira-sync.js
 
     - name: Upload Test Reports Artifacts

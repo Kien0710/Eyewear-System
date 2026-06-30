@@ -62,6 +62,49 @@ async function fetchJson(method, url, body = null) {
   }
 }
 
+// ── AIOps: OpenAI Integration cho việc phân tích Bug ───────────────
+async function getStoryPointFromAI(bugDetails, errorMsg) {
+  if (!process.env.OPENAI_API_KEY) {
+    return null; // Trả về null nếu chưa cấu hình API Key, để dùng fallback logic
+  }
+  
+  const prompt = `
+    Đóng vai là Tech Lead chuyên nghiệp. Hãy đánh giá Story Point (1, 2, 3, 5, 8, 13) để fix bug sau:
+    - Chi tiết lỗi: ${errorMsg}
+    - Payload/Data: ${bugDetails}
+    Quy tắc: Lỗi logic phức tạp -> 5 hoặc 8. Lỗi cú pháp nhỏ -> 1 hoặc 2. Lỗi thông thường -> 3.
+    Lưu ý: Chỉ trả về một con số nguyên duy nhất, tuyệt đối không giải thích thêm.
+  `;
+
+  try {
+    console.log("🤖 Đang nhờ AI phân tích độ phức tạp của Bug...");
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.1
+      })
+    });
+    
+    const data = await response.json();
+    if (data.error) {
+      console.log("⚠️ AI Error:", data.error.message);
+      return null;
+    }
+    const aiPoint = parseInt(data.choices[0].message.content.trim());
+    console.log(`🧠 AI đề xuất Story Point: ${aiPoint}`);
+    return isNaN(aiPoint) ? null : aiPoint; 
+  } catch (error) {
+    console.log("⚠️ Không thể kết nối AI Server, sẽ dùng thuật toán Fallback.");
+    return null; 
+  }
+}
+
 const normalize = v => String(v || "").replace(/[\r\n\t]+/g, " ").replace(/\s+/g, " ").trim();
 const slugify   = v => normalize(v).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
 const adf       = lines => ({
@@ -401,6 +444,7 @@ async function main() {
       
       // Calculate priority dynamically based on business impact
       let priorityName = "High";
+      
       const modLower = (bug.moduleName || "").toLowerCase();
       const apiLower = (bug.apiName || "").toLowerCase();
       
@@ -412,6 +456,16 @@ async function main() {
         priorityName = "Medium";
       } else {
         priorityName = "Medium";
+      }
+
+      // Tích hợp AIOps: Thử dùng AI để chấm điểm trước
+      let storyPoint = await getStoryPointFromAI(bug.details || "", bug.errorMsg || "");
+      
+      // Fallback: Nếu không có API Key AI hoặc AI lỗi, dùng thuật toán If-Else
+      if (storyPoint === null) {
+        if (priorityName === "Highest") storyPoint = 5;
+        else if (priorityName === "High") storyPoint = 3;
+        else storyPoint = 2;
       }
 
       const jiraData = {
@@ -461,6 +515,8 @@ async function main() {
           priority:  { name: priorityName },
           labels: ["ci-cd", "postman", "auto-detected", `api-${bug.bugKey}`],
           assignee:  { accountId: members[index % members.length] }
+          // 💡 Nếu muốn tự động gán Story Point vào Jira, bỏ comment dòng dưới (cần thay customfield_10016 bằng ID chuẩn của dự án)
+          // , customfield_10016: storyPoint
         }
       };
       const res = await fetchJson("POST", `${jiraBase}/rest/api/3/issue`, jiraData);
