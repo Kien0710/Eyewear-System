@@ -63,16 +63,21 @@ class EnterpriseIntegrationCoverageTest extends TestCase
     }
     public function test_admin_service_real_db(): void
     {
+        $db = Database::getInstance();
+        $db->exec("INSERT INTO `user` (full_name, email, password_hash, status) VALUES ('Temp Service Test', 'temp_srv_test@example.com', 'hash', 'active')");
+        $tempUserId = (int)$db->lastInsertId();
+        $db->exec("INSERT INTO user_roles (user_id, role_id) VALUES ($tempUserId, 2)");
+
         $service = new AdminService();
         $this->assertIsArray($service->getAllRoles());
         
         try { $service->getAllUsers(); } catch (\Throwable $e) {$this->assertTrue(true);}
-        try { $service->getUserById(1); } catch (\Throwable $e) {$this->assertTrue(true);}
+        try { $service->getUserById($tempUserId); } catch (\Throwable $e) {$this->assertTrue(true);}
         try { $service->createStaff([]); } catch (\Throwable $e) {$this->assertTrue(true);}
-        try { $service->getStaffById(1); } catch (\Throwable $e) {$this->assertTrue(true);}
-        try { $service->updateStaffStatus(1, 'active'); } catch (\Throwable $e) {$this->assertTrue(true);}
-        try { $service->updateUserRole(1, 2); } catch (\Throwable $e) {$this->assertTrue(true);}
-        try { $service->deleteStaff(1); } catch (\Throwable $e) {$this->assertTrue(true);}
+        try { $service->getStaffById($tempUserId); } catch (\Throwable $e) {$this->assertTrue(true);}
+        try { $service->updateStaffStatus($tempUserId, 'active'); } catch (\Throwable $e) {$this->assertTrue(true);}
+        try { $service->updateUserRole($tempUserId, 2); } catch (\Throwable $e) {$this->assertTrue(true);}
+        try { $service->deleteStaff($tempUserId); } catch (\Throwable $e) {$this->assertTrue(true);}
         try { $service->getRoleById(1); } catch (\Throwable $e) {$this->assertTrue(true);}
         try { $service->setSystemConfig('test', 'test'); } catch (\Throwable $e) {$this->assertTrue(true);}
         try { $service->getSystemConfig('test'); } catch (\Throwable $e) {$this->assertTrue(true);}
@@ -81,6 +86,18 @@ class EnterpriseIntegrationCoverageTest extends TestCase
         try { $service->getAllVouchers(); } catch (\Throwable $e) {$this->assertTrue(true);}
         try { $service->updateVoucher(1, ['title' => 'Test']); } catch (\Throwable $e) {$this->assertTrue(true);}
         try { $service->deactivateVoucher(1); } catch (\Throwable $e) {$this->assertTrue(true);}
+        
+        // Clean up temp user
+        $db->exec("DELETE FROM user_roles WHERE user_id = $tempUserId");
+        $db->exec("DELETE FROM `user` WHERE id = $tempUserId");
+        
+        // Restore/Ensure admin user (ID 1) is active and has ADMIN role
+        $db->exec("UPDATE `user` SET status = 'active' WHERE id = 1");
+        $roleAdmin = $db->query("SELECT id FROM role WHERE name = 'ADMIN'")->fetchColumn();
+        if ($roleAdmin) {
+            $db->exec("INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (1, $roleAdmin)");
+        }
+
         $this->assertTrue(true);
 
     }
