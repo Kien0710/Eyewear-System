@@ -138,6 +138,10 @@ jobs:
     - name: Run Eyewear API Tests
       timeout-minutes: 10
       run: |
+        echo "🔄 Resetting database for Newman tests..."
+        mysql -h 127.0.0.1 -u root -proot eyewear_system < backend/database/schema.sql
+        php backend/database/seeder.php
+        
         newman run "Eyewear-System.postman_collection.json" \
           -e "Eyewear-Local-Environment.postman_environment.json" \
           --env-var "baseUrl=http://127.0.0.1:8000/api/v1" \
