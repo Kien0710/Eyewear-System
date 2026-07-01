@@ -38,8 +38,9 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3'
-        extensions: pdo, pdo_mysql, mbstring, openssl, xdebug
-        coverage: xdebug
+        extensions: pdo, pdo_mysql, mbstring, openssl, pcov
+        ini-values: pcov.directory=.
+        coverage: pcov
 
     - name: Cache Composer dependencies
       uses: actions/cache@v4
