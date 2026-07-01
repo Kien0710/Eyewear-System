@@ -131,7 +131,10 @@ class AdminController extends BaseController
      */
     public function listRoles()
     {
-
+        $userId = $this->requireAuth();
+        if (!$userId) {
+            return ApiResponse::unauthorized();
+        }
 
         try {
             $roles = $this->adminService->getAllRoles();

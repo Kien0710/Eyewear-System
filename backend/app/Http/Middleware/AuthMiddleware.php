@@ -42,7 +42,8 @@ class AuthMiddleware
         // Handle combined Authorization headers like: "Bearer <token1>, Bearer <token2>"
         // and prefer the last explicit Bearer token because request-level headers
         // typically override inherited collection-level auth in API tools.
-        if (preg_match_all('/Bearer\s+([^,\s]+)/i', $authHeader, $matches) === 1 || !empty($matches[1])) {
+        $matchCount = preg_match_all('/Bearer\s+([^,\s]+)/i', $authHeader, $matches);
+        if ($matchCount !== false && $matchCount >= 1) {
             $tokens = array_values(array_filter(array_map('trim', $matches[1]), static fn ($token) => $token !== ''));
             if (!empty($tokens)) {
                 return $tokens[count($tokens) - 1];
@@ -54,6 +55,8 @@ class AuthMiddleware
         }
 
         $token = trim(substr($authHeader, 7));
+        // Strip trailing comma in case of combined header remnants
+        $token = rtrim($token, ', ');
         return $token !== '' ? $token : null;
     }
 }
